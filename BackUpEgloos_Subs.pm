@@ -1327,6 +1327,7 @@ sub writeTTXML($$$$\@\@\@\%)
 	
 	# 가져온 카테고리 자료를 가지고 하나씩 xml 파일을 작성한다.
 	# $results 앞에 @을 붙인 이유는 해당 변수를 배열로 생각하라는 뜻이다.
+	my $priority_id = 1;
 	foreach (@$results)
 	{
 		# foreach 구문 안에서 $_은 괄호 안의 것이 하나씩 나타낸다.
@@ -1346,10 +1347,13 @@ sub writeTTXML($$$$\@\@\@\%)
 			$xml_writer->endTag("name");
 			
 	#		이글루스의 경우 카테고리 밑에 카테고리는 존재하지 않는다.
+	#		위의 설명은 틀렸다.
+	#		priority는 카테고리의 순서를 나타내는 것이다.
 			$xml_writer->startTag("priority");
-			$xml_writer->characters("1");
+			$xml_writer->characters($priority_id);
 			$xml_writer->endTag("priority");
 			$xml_writer->endTag("category");
+			$priority_id++;
 		}
 	}
 	my_print("카테고리 가져오기 완료.\n\n");
