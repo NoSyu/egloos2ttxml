@@ -20,12 +20,12 @@ BEGIN {
 }
 
 #메시지 출력
-my_print("\t\t\tEgloos2TTXML ver 0.0.7.2\n");
+my_print("\t\t\tEgloos2TTXML ver 0.0.7.3\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
 my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
 
-my_print("그림과 글 정보는 data 폴더에 Post ID별로 생성이 됩니다.\n");
+my_print("그림과 글 정보는 data 폴더에 Post ID별로 생성됩니다.\n");
 my_print("또한, posts, trackbacks, comments라는 폴더 안에 리스트들이 저장되어 있습니다.\n");
 my_print("따라서 새롭게 시작할 때 이글루스에 접근하지 않고서 매우 빠른 속도로 진행합니다.\n");
 my_print("새로운 글, 트랙백, 댓글을 받기 위해서는 세 폴더를 지우고 새롭게 실행하세요.\n\n");
