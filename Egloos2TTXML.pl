@@ -20,7 +20,7 @@ BEGIN {
 }
 
 #메시지 출력
-my_print("\t\t\tEgloos2TTXML ver 0.0.7.3\n");
+my_print("\t\t\tEgloos2TTXML ver 0.0.7.4\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
 my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
@@ -37,7 +37,7 @@ my_print("새로운 글, 트랙백, 댓글을 받기 위해서는 세 폴더를 
 #my_print('혹은 Egloos2TTXML_PAR.exe만을 실행시켜도 됩니다.' . "\n\n");
 
 #my_print("아직 테스트 중이기에 속도가 느리고, 안되는 것이 있을겁니다.\n");
-my_print('문의사항은 http://nosyu.pe.kr이나 nosyus@gmail.com으로 연락주시기 바랍니다.' . "\n");
+my_print('문의사항은 http://nosyu.pe.kr이나 nosyu@nosyu.pe.kr로 연락주시기 바랍니다.' . "\n");
 my_print("error로 시작하는 txt 파일을 보내주신다면 정확한 답변을 얻을 수 있습니다.\n\n");
 
 my_print("===============================================================================\n");
@@ -101,7 +101,7 @@ else
 	}
 	else
 	{
-		my_print("본문, 트랙백, 덧글 안의 기존 블로그 주소가" . $newblogurl . "(으로/로) 바뀝니다.\n\n");
+		my_print("본문, 트랙백, 덧글 안의 기존 블로그 주소가 " . $newblogurl . "(으로/로) 바뀝니다.\n\n");
 	}
 	
 	# Egloosinfo 변수를 생성한다.

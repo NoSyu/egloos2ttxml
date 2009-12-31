@@ -137,7 +137,7 @@ sub getApiInfo
 #	예제 : <dd><span id="rpckey">API 키 값</span>
 	my $needle2 = '<dt>APIkey</dt><dd><spanid="rpckey">'; # APIKey를 찾는 needle
 #	예제 : http://www.egloos.com/adm/api/chgapi_info.php?eid=f0012026
-	my $pageURL = 'http://www.egloos.com/adm/api/chgapi_info.php?eid=' . $eid;
+	my $pageURL = 'http://www.egloos.com/adm/basic/chgegloo_info.php?eid=' . $eid;
 	
 	my $result = BackUpEgloos_Subs::getpage($pageURL);
 	#공백을 모두 제거한다.
