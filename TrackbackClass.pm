@@ -121,6 +121,13 @@ sub new ($$$$$\%\@)
 	$description = $1;
 	$post_title = $2;
 	
+#	&quot; -> "
+	$description =~ s/&quot;/"/ig;
+
+#	&quot; -> "
+	$post_title =~ s/&quot;/"/ig;
+	
+	
 #	주소 안의 자신의 블로그 주소를 새로운 것으로 바꿈.
 	if(!('' eq $newblogurl))
 	{

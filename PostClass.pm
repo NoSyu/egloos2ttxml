@@ -83,6 +83,9 @@ sub new ($$$\%%)
 		$description = $result{description};
 		$category = @{$result{categories}}[0];
 		
+#	&quot; -> "
+		$title =~ s/&quot;/"/ig;
+	
 		# 시간은 받고나서 TTXML 형태에 맞춰 처리.
 		$time = $result{dateCreated}; # 2007-08-09T13:39:56
 		$time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
