@@ -87,10 +87,20 @@ sub new ($$$\%%)
 		$title =~ s/&quot;/"/ig;
 	
 		# 시간은 받고나서 TTXML 형태에 맞춰 처리.
-		$time = $result{dateCreated}; # 2007-08-09T13:39:56
+		$time = $result{dateCreated}; # 20070809T13:39:56		
 		$time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
-		$time = DateTime->new(year => $1, month  => $2, day => $3,
+		# 시간이 리눅스와 윈도우에서 가져오는 폼이 다르다.
+		if(!$1)
+		{
+			$time =~ /(\d{4})(\d{2})(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
+			$time = DateTime->new(year => $1, month  => $2, day => $3,
 					hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+		}
+		else
+		{
+			$time = DateTime->new(year => $1, month  => $2, day => $3,
+					hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+		}
 		$time = $time->epoch();
 		
 		
