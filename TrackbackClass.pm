@@ -96,7 +96,7 @@ sub new ($$$$$\%\@)
 #	예제.
 #	Tracked from  <a href="http://www.sis.pe.kr/2252" target="_new"><strong>엔시스의  정보보호 따..</strong></a> at 2008/10/01 08:45 <a href="
 #	2009-1-12 추가.
-	if($trackback_html =~ m/Tracked from  <a href="(.*?)"[^>]+><strong>(.*?)<\/strong><\/a> at (\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2}) <a href="/i)
+	if($trackback_html =~ m/Tracked from  <a href="(.*?)"[^>]+><strong>(.*?)<\/strong><\/a> at (\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i)
 	{
 		$href = $1;
 		$blog_title = $2;
@@ -109,7 +109,7 @@ sub new ($$$$$\%\@)
 #		에러가 자주 나기에 리포트 용으로 만듬.
 #		최근에는 잘 나타나지 않으나 그래도 남겨둠.
 		BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 트랙백 " . $trackbackid . "\n");
-		BackUpEgloos_Subs::my_print('error.txt를 nosyus@gmail.com으로 보내주시길 바랍니다.' . "\n");
+		BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
 		BackUpEgloos_Subs::print_txt("TrackbackClass__time\n\n" . $blogurl . '/' . $postid . '#' . $trackbackid . "\n\n" . $trackback_html . "\n\n" . $content . "\n\n" . $trackback_field); # 디버그용.
 		die;
 	}

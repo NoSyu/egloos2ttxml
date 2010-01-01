@@ -824,7 +824,7 @@ sub get_all_post ($\%)
 #				하도 버그가 많이 나와서 if 문에 else문을 붙여 버그를 잡아보자는 생각에 형식상으로 하나 만들었다.
 #				하지만 아직 여기에 대해 리포트가 된 적은 없다.
 				my_print("get_all_post 함수에서 postid를 찾지 못했습니다.\n");
-				my_print('error.txt를 nosyus@gmail.com으로 보내주시길 바랍니다.' . "\n");
+				my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
 				print_txt("BackUpEgloos_Subs__get_all_post\n\n" . $egloosinfo->{blogurl} . "\n\n" . $post_field . "\n\n" . $content); # 디버그용.
 				die;
 			}

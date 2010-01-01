@@ -71,7 +71,7 @@ sub new ($$$\%%)
 		if(exists $result{faultString})
 		{
 			BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
-			BackUpEgloos_Subs::my_print('error.txt를 nosyus@gmail.com으로 보내주시길 바랍니다.' . "\n");
+			BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
 			BackUpEgloos_Subs::print_txt('faultString : ' . $result{faultString} . " \nfaultCode : " . $result{faultCode} . "\n");
 			return -1;
 		}

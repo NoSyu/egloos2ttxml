@@ -248,7 +248,7 @@ sub new ($$$$\%\@)
 #		여기서 에러가 발생하기에 글과 댓글 번호를 출력후 종료. - 2009-1-11
 #		댓글 목록에서 시간을 가져오기에 에러가 날 일이 거의 없지만, 그래도 역시 예전에 만든 것이라 지우지 않고 그대로 두었다.
 		BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 댓글 " . $commentid . "\n");
-		BackUpEgloos_Subs::my_print('error.txt를 nosyus@gmail.com으로 보내주시길 바랍니다.' . "\n");
+		BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
 		BackUpEgloos_Subs::print_txt("CommentClass__time2\n\n" . $blogurl . '/' . $postid . '#' . $commentid . "\n\n" . $comment_html . "\n\n" . $content . "\n\n" . $comment_field); # 디버그용.
 		die;
 	}
