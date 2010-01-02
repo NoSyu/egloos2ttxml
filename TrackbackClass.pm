@@ -108,7 +108,7 @@ sub new ($$$$$\%\@)
 						hour => $6, minute => $7, second => 0, time_zone => 'Asia/Seoul');
 		$time = $time->epoch();
 	}
-	elsif($trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;)
+	elsif($trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i)
 	{
 #		스킨이 다르기에 안 되는 것임. 날짜는 잡으나 시간을 00:00으로 잡는다.
 		$time = DateTime->new(year => $1, month  => $2, day => $3,
