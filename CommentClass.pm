@@ -239,8 +239,8 @@ sub new ($$$$\%\@)
 							hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
 		$time = $time->epoch();
 		
-#		하지만 에러에 속하니 출력한다.
-		BackUpEgloos_Subs::print_txt("CommentClass__time1\n\n" . $blogurl . '/' . $postid . '#' . $commentid . "\n\n" . $comment_html . "\n\n" . $content . "\n\n" . $comment_field); # 디버그용.
+#		하지만 에러에 속하니 출력한다. => 스킨이 다른 경우이니 출력은 삼가한다.
+		#BackUpEgloos_Subs::print_txt("CommentClass__time1\n\n" . $blogurl . '/' . $postid . '#' . $commentid . "\n\n" . $comment_html . "\n\n" . $content . "\n\n" . $comment_field); # 디버그용.
 
 	}
 	else

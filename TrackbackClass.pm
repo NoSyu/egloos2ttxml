@@ -28,6 +28,12 @@ sub new ($$$$$\%\@)
 	$postid = $1;
 	$trackbackid = $2;
 
+#	관리 페이지에서 트랙백 보낸 곳의 정보 가져오기
+	$start_needle = '<td width="160" align="center" class="black"><a href="';
+	$trackback_field =~ m/$start_needle(.+?)"[^>]+>(.+?)<\/a>/i;
+	$href = $1;
+	$blog_title = $2;
+
 #	트랙백이 적혀진 글의 페이지 가져오기. - 수정 2009.01.11
 #	트랙백이 프로그램이 시작하는 오늘 적혔다면 다시 읽어오기. - 2009-1-13
 #	my $content = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid);
@@ -89,8 +95,8 @@ sub new ($$$$$\%\@)
 	
 #	예제.
 #	<a href="http://NoSyu.egloos.com/4631722#409427"
-	$start_needle = '<a href="' . $blogurl . '/' . $postid . '#' . $trackbackid;
-	$content =~ m/$start_needle[^>]+>(.*?)<div class="comment_body"/i;
+	$start_needle = '<a href="' . $blogurl . '/' . $postid . '#' . $trackbackid . '" title="#">';
+	$content =~ m/$start_needle(.*?)<div class="comment_body"/i;
 	my $trackback_html = $1;
 	
 #	예제.
@@ -98,20 +104,26 @@ sub new ($$$$$\%\@)
 #	2009-1-12 추가.
 	if($trackback_html =~ m/Tracked from  <a href="(.*?)"[^>]+><strong>(.*?)<\/strong><\/a> at (\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i)
 	{
-		$href = $1;
-		$blog_title = $2;
 		$time = DateTime->new(year => $3, month  => $4, day => $5,
 						hour => $6, minute => $7, second => 0, time_zone => 'Asia/Seoul');
 		$time = $time->epoch();
 	}
+	elsif($trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;)
+	{
+#		스킨이 다르기에 안 되는 것임. 날짜는 잡으나 시간을 00:00으로 잡는다.
+		$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+		$time = $time->epoch();
+	}
 	else
 	{
-#		에러가 자주 나기에 리포트 용으로 만듬.
+#		에러가 날 일이 거의 없지만 혹시나 하는 생각에 리포트 용으로 만듬.
 #		최근에는 잘 나타나지 않으나 그래도 남겨둠.
 		BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 트랙백 " . $trackbackid . "\n");
 		BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
 		BackUpEgloos_Subs::print_txt("TrackbackClass__time\n\n" . $blogurl . '/' . $postid . '#' . $trackbackid . "\n\n" . $trackback_html . "\n\n" . $content . "\n\n" . $trackback_field); # 디버그용.
 		die;
+
 	}
 	
 	
