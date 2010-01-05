@@ -217,8 +217,8 @@ sub new ($$$$\%\@)
 		$description =~ s/&quot;/"/ig;
 	#	&lt; -> <
 		$description =~ s/&lt;/</ig;
-	#	&rt; -> >
-		$description =~ s/&rt;/>/ig;
+	#	&gt; -> >
+		$description =~ s/&gt;/>/ig;
 	#	&amp; -> &
 		$description =~ s/&amp;/&/ig;
 		

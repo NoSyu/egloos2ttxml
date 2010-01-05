@@ -138,8 +138,8 @@ sub new ($$$$$\%\@)
 		$description =~ s/&quot;/"/ig;
 	#	&lt; -> <
 		$description =~ s/&lt;/</ig;
-	#	&rt; -> >
-		$description =~ s/&rt;/>/ig;
+	#	&gt; -> >
+		$description =~ s/&gt;/>/ig;
 	#	&amp; -> &
 		$description =~ s/&amp;/&/ig;
 
@@ -148,8 +148,8 @@ sub new ($$$$$\%\@)
 		$post_title =~ s/&quot;/"/ig;
 	#	&lt; -> <
 		$post_title =~ s/&lt;/</ig;
-	#	&rt; -> >
-		$post_title =~ s/&rt;/>/ig;
+	#	&gt; -> >
+		$post_title =~ s/&gt;/>/ig;
 	#	&amp; -> &
 		$post_title =~ s/&amp;/&/ig;	
 	
