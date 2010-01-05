@@ -133,12 +133,25 @@ sub new ($$$$$\%\@)
 	$description = $1;
 	$post_title = $2;
 	
-#	&quot; -> "
-	$description =~ s/&quot;/"/ig;
+# 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
+	#	&quot; -> "
+		$description =~ s/&quot;/"/ig;
+	#	&lt; -> <
+		$description =~ s/&lt;/</ig;
+	#	&rt; -> >
+		$description =~ s/&rt;/>/ig;
+	#	&amp; -> &
+		$description =~ s/&amp;/&/ig;
 
-#	&quot; -> "
-	$post_title =~ s/&quot;/"/ig;
-	
+# 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
+	#	&quot; -> "
+		$post_title =~ s/&quot;/"/ig;
+	#	&lt; -> <
+		$post_title =~ s/&lt;/</ig;
+	#	&rt; -> >
+		$post_title =~ s/&rt;/>/ig;
+	#	&amp; -> &
+		$post_title =~ s/&amp;/&/ig;	
 	
 #	주소 안의 자신의 블로그 주소를 새로운 것으로 바꿈.
 	if(!('' eq $newblogurl))

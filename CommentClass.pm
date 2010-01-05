@@ -66,14 +66,6 @@ sub new ($$$$\%\@)
 	$postid = $1;
 	$commentid = $2;
 	
-#	댓글 내용 가져오기.
-#	예제.
-#	<td width="395" class="black"><a href="http://NoSyu.egloos.com/4804153" title="블라블라~(즉, 뒤에 있는 것은 생략.)
-#	하지만 이 코드는 해당 페이지를 찾아가서 정보를 가져온다.
-#	그런데 댓글 목록을 살펴보니 댓글의 내용이 전부 html 코드 안에 있다는 것을 발견하여서 거기서 처리하기로 하였다.
-#	$comment_field =~ m/<td width="395" class="black"><a href="[^"]+" title="(.*?)" target="_new">(?:.*?)<\/a><\/td>/i;
-#	$description = $1;
-	
 #	댓글 적은이 정보 가져오기.
 #	예제.
 #	<td width="100" align="center" class="black"><a href="http://NoSyu.egloos.com"  target="_new">NoSyu</a></td>
@@ -195,18 +187,41 @@ sub new ($$$$\%\@)
 #	<a href="http://nosyu55082.egloos.com/4046512#12251763" title="#"><img src="http://md.egloos.com/img/eg/post_security3.gif" width="9" height="10" border="0" /></a> Commented  by <a href="http://NoSyu.egloos.com" title="http://NoSyu.egloos.com"><strong>NoSyu</strong></a> at 2009/01/13 15:28 <a href="#" onclick="delComment('b0068701','4046512','12251763','NoSyu','0','1','0','0' ); return false;"><img src="http://md.egloos.com/img/eg/icon_delete.gif" width="9" height="9" title="삭제" border="0"  style="vertical-align:middle;"/></a> <a href="#" onclick="replyComment('replyform4046512','4046512','12251763',4,'',''); return false;" title="답글"><img src="http://md.egloos.com/img/eg/icon_reply.gif" width="9" height="9" title="답글" border="0"  style="vertical-align:middle;"/></a></div>
 #	<div class="comment_body" style="width:98%;"><div style="margin:0px;width:100%;overflow:hidden;word-break:break-all;">asdfasdfasdfasdfasdf</div></div>
 	$needle1 = '<a href="' . $blogurl . '/' . $postid . '#' . $commentid;
-	$content =~ m/$needle1[^>]+>(.*?)<div class="[^>]+><div style=[^>]+>(.*?)<\/div><\/div>/i;
-	my $comment_html = $1;
-#	댓글 내용 가져오기.	
-#	예제.
-	$description = $2;
-#	본문에 있는 댓글의 경우 개행문자는 <br />로 처리되어있지만, TTXML에서는 \n으로 되어있어 (물론 댓글 목록에서 확인하면 이글루스도 같다는 것을 알 수 있음.) 이를 바꾼다.	
-	$description =~ s/<br\/>/\n/ig;
-#	<a href="http://namu42.blogspot.com">http://namu42.blogspot.com</a>
-	$description =~ s/<a href=[^>]+>(.+?)<\/a>/$1/ig;
-#	&quot; -> "
-	$description =~ s/&quot;/"/ig;
+	my $comment_html = '';
 	
+	if($content =~ m/$needle1[^>]+>(.*?)<div class="[^>]+><div style=[^>]+>(.*?)<\/div><\/div>/i)
+	{
+		$comment_html = $1;
+		
+		#	댓글 내용 가져오기.	
+		#	예제.
+			$description = $2;
+		#	본문에 있는 댓글의 경우 개행문자는 <br />로 처리되어있지만, TTXML에서는 \n으로 되어있어 (물론 댓글 목록에서 확인하면 이글루스도 같다는 것을 알 수 있음.) 이를 바꾼다.	
+			$description =~ s/<br\/>/\n/ig;
+		#	<a href="http://namu42.blogspot.com">http://namu42.blogspot.com</a>
+			$description =~ s/<a href=[^>]+>(.+?)<\/a>/$1/ig;
+	}
+	else
+	{
+		#	댓글 내용 가져오기.
+		#	예제.
+		#	<td width="395" class="black"><a href="http://NoSyu.egloos.com/4804153" title="블라블라~(즉, 뒤에 있는 것은 생략.)
+		#	하지만 이 코드는 해당 페이지를 찾아가서 정보를 가져온다.
+		#	그런데 댓글 목록을 살펴보니 댓글의 내용이 전부 html 코드 안에 있다는 것을 발견하여서 거기서 처리하기로 하였다.
+			$comment_field =~ m/<td width="395" class="black"><a href="[^"]+" title="(.*?)" target="_new">(?:.*?)<\/a><\/td>/i;
+			$description = $1;
+	}
+	
+	# 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
+	#	&quot; -> "
+		$description =~ s/&quot;/"/ig;
+	#	&lt; -> <
+		$description =~ s/&lt;/</ig;
+	#	&rt; -> >
+		$description =~ s/&rt;/>/ig;
+	#	&amp; -> &
+		$description =~ s/&amp;/&/ig;
+		
 #	시간.
 #	예제.
 #	Commented  by <a href="http://nosyu55082.egloos.com" title="http://nosyu55082.egloos.com"><strong>nosyu5508</strong></a> at 2009/01/09 01:16 <a href="#" onclick="delComment('b0068701','4046501','12246239','nosyu5508','0','1','0','0' ); return false;"><img src="http://md.egloos.com/img/eg/icon_delete.gif" width="9" height="9" title="삭제" border="0"  style="vertical-align:middle;"/></a> <a href="#" onclick="replyComment('replyform4046501','4046501','12246239',1,'',''); return false;" title="답글"><img src="http://md.egloos.com/img/eg/icon_reply.gif" width="9" height="9" title="답글" border="0"  style="vertical-align:middle;"/></a></div><div class="
