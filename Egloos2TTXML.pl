@@ -20,7 +20,7 @@ BEGIN {
 }
 
 #메시지 출력
-my_print("\t\t\tEgloos2TTXML ver 0.0.7.6\n");
+my_print("\t\t\tEgloos2TTXML ver 0.0.8.0\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
 my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
@@ -183,7 +183,7 @@ while(1)
 		{
 			# 하나로 만들기에 나누지 않고 다 보낸다.
 			# number는 0으로 한다. 물론 나눌 경우 1부터 시작하게 한다.
-			my_print("파일 하나에 모든 자료를 적겠습니다.\n\n ");
+			my_print("파일 하나에 모든 자료를 적겠습니다.\n\n");
 			writeTTXML($egloosinfo, 0, 0, $all_post_count, @all_post, @all_trackback, @all_comment, %postid_index);
 			
 			# 사용자의 입력을 받기 위해 만든 무한루프 빠져나가기.

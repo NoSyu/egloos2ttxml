@@ -119,12 +119,29 @@ sub new ($$$\%%)
 #		파일이 존재하지 않기에 페이지 접근.
 		my $content = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/' . $postid);
 #		<!-- egloos content start -->(.*?)<!-- egloos content end -->
-		$content =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig;
-		$content_html = $1;
+		if($content =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig)
+		{
+			$content_html = $1;
+		}
+		# 스킨 2.0
+		elsif($content =~ m/<div class="body">(.*?)<div class="post_navi">/ig)
+		{
+			$content_html = $1;
+		}
+		else
+		{
+			$content_html = $content;
+		}
 		
 #		트랙백 개수 가져오기.
 #		<span class="linkback">트랙백(<span id="trbcnt4046501">1</span>)
 		if($content_html =~ m/<span class="linkback">트랙백\(<span [^>]+>(.*?)<\/span>\)/i)
+		{
+			$trackback_count = $1;
+		}
+		# 스킨 2.0
+		# <a class="post_tail_trbk">트랙백(<span id="trbcnt2500689" class="count">2</span>)</a>
+		elsif($content_html =~ m/<a class="post_tail_trbk">트랙백\(<span [^>]+>(.*?)<\/span>\)/i)
 		{
 			$trackback_count = $1;
 		}
@@ -136,6 +153,12 @@ sub new ($$$\%%)
 #		댓글 개수 가져오기.
 #		<span class="linkback">덧글(<span id="cmtcnt4794508">10</span>)
 		if($content_html =~ m/<span class="linkback">덧글\(<span [^>]+>(.*?)<\/span>\)/i)
+		{
+			$comment_count = $1;
+		}
+		# 스킨 2.0
+		# <a class="post_tail_cmmt"> 덧글(<span id="cmtcnt2500689" class="count">4</span>)</a>
+		elsif($content_html =~ m/<a class="post_tail_cmmt"> 덧글\(<span [^>]+>(.*?)<\/span>\)/i)
 		{
 			$comment_count = $1;
 		}
@@ -159,24 +182,55 @@ sub new ($$$\%%)
 #		댓글의 개수가 100개 이상이면...
 		if($comment_count > 100)
 		{
-			my $start_needle = '<a href="#" onclick="cmtview_more';
 			my $comments_html = $content_html;
 			
-			while($comments_html =~ m/$start_needle\('$postid','$egloosinfo->{eid}','1',(\d{1,2}), 0, this\); return false;">이전 덧글/i)
+			# 예전 것.
+			if($comments_html =~ m/<a href="#" onclick="cmtview_more\('$postid','$egloosinfo->{eid}','1',(\d{1,2}), 0, this\); return false;">이전 덧글/i)
 			{
-#				이전 댓글이 존재한다.
-#				가져오기.
-				my $comments_src = $egloosinfo->{blogurl} . '/egloo_comment.php?eid=' . $egloosinfo->{eid} . '&srl=' . $postid . '&xhtml=1&adview=0&page=' . $1 . '&ismenu=0';
-				$comments_html = BackUpEgloos_Subs::getpage($comments_src);
+				while($comments_html =~ m/<a href="#" onclick="cmtview_more\('$postid','$egloosinfo->{eid}','1',(\d{1,2}), 0, this\); return false;">이전 덧글/i)
+				{
+	#				이전 댓글이 존재한다.
+	#				가져오기.
+					my $comments_src = $egloosinfo->{blogurl} . '/egloo_comment.php?eid=' . $egloosinfo->{eid} . '&srl=' . $postid . '&xhtml=1&adview=0&page=' . $1 . '&ismenu=0';
+					$comments_html = BackUpEgloos_Subs::getpage($comments_src);
+					
+	#				이상한 것 제거.
+	#				아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
+					$comments_html =~ s/\\"(.*?)\\"/"$1"/ig;
+					$comments_html =~ s/\\'(.*?)\\'/'$1'/ig;
+					
+	#				붙이기.
+	#				기존의 것과 연결해서 붙여넣기.
+					$content_html = $content_html . $comments_html;
+				}
+			}
+			# 스킨 2.0
+			# http://dongdm.egloos.com/egloo_feedback.php?eid=a0030011&ismain=&page=2&srl=2500684&type=post_comment&xhtml=1
+			else
+			{
+				my $comments_html;
+				my $comment_count_i = $comment_count;
+				my $cmt_page = 2;
+				my $comments_src = $egloosinfo->{blogurl} . '/egloo_feedback.php?eid=' . $egloosinfo->{eid} . '&ismain=&type=post_comment&xhtml=1&srl=' . $postid . '&page=';
 				
-#				이상한 것 제거.
-#				아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
-				$comments_html =~ s/\\"(.*?)\\"/"$1"/ig;
-				$comments_html =~ s/\\'(.*?)\\'/'$1'/ig;
-				
-#				붙이기.
-#				기존의 것과 연결해서 붙여넣기.
-				$content_html = $content_html . $comments_html;
+				while($comment_count_i > 100)
+				{
+					# 가져오기.
+					$comments_html = BackUpEgloos_Subs::getpage($comments_src . $cmt_page);
+					
+					# 이상한 것 제거.
+					# 아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
+					$comments_html =~ s/\\"(.*?)\\"/"$1"/ig;
+					$comments_html =~ s/\\'(.*?)\\'/'$1'/ig;
+					
+					# 붙이기.
+					# 기존의 것과 연결해서 붙여넣기.
+					$content_html = $content_html . $comments_html;
+					
+					# 루프 다음 것 처리.
+					$comment_count_i -= 100;
+					$cmt_page++;
+				}				
 			}
 		}
 		

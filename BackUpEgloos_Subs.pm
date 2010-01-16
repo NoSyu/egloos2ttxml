@@ -324,6 +324,23 @@ sub write_post ($$$$\@\@\%)
 				$xml_writer->endTag("tag");
 			}
 		}
+#		스킨 2.0			2010.01.16
+#		<div class="post_taglist f_clear"><strong>태그 : </strong><a href="/tag/굿포유" rel="tag">굿포유</a>, <a href="/tag/kkk" rel="tag">kkk</a></div>
+		elsif($page =~ m/<div class="post_taglist f_clear"><strong>태그 : <\/strong>(.+?)<\/div>/g)
+		{
+			my $tag_html = $1;
+			# 예제 : 주민등록번호,&nbsp;도용,&nbsp;탈퇴,&nbsp;웹사이트,&nbsp;사이트
+			$tag_html =~ s/<a href="[^"]+" rel="tag">(.*?)<\/a>/$1/ig;
+			@tags = split /,\&nbsp;/, $tag_html;
+			
+#			tags 변수 안에 있는 것을 xml에 하나씩 쓰기.
+			foreach (@tags)
+			{
+				$xml_writer->startTag("tag");
+				$xml_writer->characters($_);
+				$xml_writer->endTag("tag");
+			}	
+		}
 	}
 	
 #	본문 안의 자신의 블로그 주소를 새로운 것으로 바꿈.
@@ -915,15 +932,11 @@ sub get_all_trackback ($\@\%)
 #		처음 것 설정.
 		$start_ele_postid = $all_trackback[$i]->{postid};
 		
-#		다를 때까지 달린다.
-		if($j <= $all_trackback_size)
+#		다를 때까지 달린다.		
+		while($j <= $all_trackback_size && $start_ele_postid == $all_trackback[$j]->{postid})
 		{
-			while($start_ele_postid == $all_trackback[$j]->{postid})
-			{
-				$j++;
-			}
+			$j++;
 		}
-		
 		
 #		셋팅.
 		my $post_arr_index = $postid_index->{$start_ele_postid};

@@ -44,7 +44,7 @@ sub new ($$$$$\%\@)
 	my $temp_time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
 #	24시간 안에 올라온 것인지 확인.
-	if(DateTime->compare($temp_time, $dt_today) > 0)
+	if(DateTime->compare($temp_time, $dt_today) < 0)
 	{
 #		24시간 안에 올라온 것이기에 새롭게 받는다.
 		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid);
@@ -108,24 +108,34 @@ sub new ($$$$$\%\@)
 						hour => $6, minute => $7, second => 0, time_zone => 'Asia/Seoul');
 		$time = $time->epoch();
 	}
-	elsif($trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i)
-	{
-#		스킨이 다르기에 안 되는 것임. 날짜는 잡으나 시간을 00:00으로 잡는다.
-		$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
-		$time = $time->epoch();
-	}
 	else
 	{
-#		에러가 날 일이 거의 없지만 혹시나 하는 생각에 리포트 용으로 만듬.
-#		최근에는 잘 나타나지 않으나 그래도 남겨둠.
-		BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 트랙백 " . $trackbackid . "\n");
-		BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
-		BackUpEgloos_Subs::print_txt("TrackbackClass__time\n\n" . $blogurl . '/' . $postid . '#' . $trackbackid . "\n\n" . $trackback_html . "\n\n" . $content . "\n\n" . $trackback_field); # 디버그용.
-		die;
+		# 스킨 2.0인지 확인한다.
+		# <li><h4><a href="http://dongdm.egloos.com/2500625" target="_blank">Yes! No!</a> <span class="trackback_datetime">2010/01/16 13:46</span> <span class="trackback_link"><a href="http://dongdm.egloos.com/2500689#572785" title="#">#</a></span> </h4> <p class="trackback_desc" id="572785" name="572785"> google_ad_client = &quot;pub-7048624575756403&quot;;google_ad_slot = &quot;1900030367&quot;;google_ad_width = 300;google_ad_height = 250;Thereare some difference between Korean and English grammar. The order ofsentence element is different. For example, translating dire...... <a href="http://dongdm.egloos.com/2500625" class="more" target="_blank">more</a></p>		
+		if($content =~ m/<span class="trackback_datetime">(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span> <span [^>]+>$start_needle/i)
+		{
+			$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
+			$time = $time->epoch();
+		}
+		elsif($trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i)
+		{
+	#		스킨이 다르기에 안 되는 것임. 날짜는 잡으나 시간을 00:00으로 잡는다.
+			$time = DateTime->new(year => $1, month  => $2, day => $3,
+							hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+			$time = $time->epoch();
+		}
+		else
+		{
+	#		에러가 날 일이 거의 없지만 혹시나 하는 생각에 리포트 용으로 만듬.
+	#		최근에는 잘 나타나지 않으나 그래도 남겨둠.
+			BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 트랙백 " . $trackbackid . "\n");
+			BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
+			BackUpEgloos_Subs::print_txt("TrackbackClass__time\n\n" . $blogurl . '/' . $postid . '#' . $trackbackid . "\n\n" . $trackback_html . "\n\n" . $content . "\n\n" . $trackback_field); # 디버그용.
+			die;
 
+		}
 	}
-	
 	
 #	예제.
 #	<td width="435" class="black"><a href="http://NoSyu.egloos.com/4631722"  title="??개인정보에 대한 이야기는 어제 오늘의 이야기가 아니죠..지금 한국정보보호진흥원(이하 'KISA)에서 개인정보 클린 캠페인을 9.24~10.24일까지 한달간 하고 있습니다. 본 블로거도 정보보호에 관심 있는 만큼 참여 해 보기로 하였습니다. 혹시, 어렵다고 하시는 분들을 위하여 하나씩 소개해 드리겠습니다. ?1. 개인정보 클린 캠페인 홈페이지를 방문한다. http://p-clean.kisa.or.kr/ 홈페이지를 방문하면 아래와 같은 홍보와 ..." target="_new">개인정보 클린 캠페인 참여해 보니 - 대부분 게임싸이트더라</a></td>
