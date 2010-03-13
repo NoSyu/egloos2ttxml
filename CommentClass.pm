@@ -198,7 +198,7 @@ sub new ($$$$\%\@)
 		#	예제.
 			$description = $2;
 		#	본문에 있는 댓글의 경우 개행문자는 <br />로 처리되어있지만, TTXML에서는 \n으로 되어있어 (물론 댓글 목록에서 확인하면 이글루스도 같다는 것을 알 수 있음.) 이를 바꾼다.	
-			$description =~ s/<br \/>/\n/ig;
+			$description =~ s/<br( *)\/>/\n/ig;
 		#	<a href="http://namu42.blogspot.com">http://namu42.blogspot.com</a>
 			$description =~ s/<a href=[^>]+>(.+?)<\/a>/$1/ig;
 	}
@@ -222,7 +222,7 @@ sub new ($$$$\%\@)
 				#	예제.
 					$description = $6;
 				#	본문에 있는 댓글의 경우 개행문자는 <br />로 처리되어있지만, TTXML에서는 \n으로 되어있어 (물론 댓글 목록에서 확인하면 이글루스도 같다는 것을 알 수 있음.) 이를 바꾼다.	
-					$description =~ s/<br \/>/\n/ig;
+					$description =~ s/<br( *)\/>/\n/ig;
 				#	<a href="http://namu42.blogspot.com">http://namu42.blogspot.com</a>
 					$description =~ s/<a href=[^>]+>(.+?)<\/a>/$1/ig;
 				
@@ -252,7 +252,7 @@ sub new ($$$$\%\@)
 				#	예제.
 					$description = $6;
 				#	본문에 있는 댓글의 경우 개행문자는 <br />로 처리되어있지만, TTXML에서는 \n으로 되어있어 (물론 댓글 목록에서 확인하면 이글루스도 같다는 것을 알 수 있음.) 이를 바꾼다.	
-					$description =~ s/<br \/>/\n/ig;
+					$description =~ s/<br( *)\/>/\n/ig;
 				#	<a href="http://namu42.blogspot.com">http://namu42.blogspot.com</a>
 					$description =~ s/<a href=[^>]+>(.+?)<\/a>/$1/ig;
 			}
