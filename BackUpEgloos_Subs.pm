@@ -862,8 +862,11 @@ sub get_all_trackback ($\@\%)
 	# 페이지 개수 가져오기.
 	my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
 	my $content = getpage($listURL);
-	$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
-	my $pagenum = $1;
+	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
+	# <b>202</b>개 트랙백
+	$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
+	my $trackback_all_num = $1;
+	my $pagenum = ($trackback_all_num / 50) + 1;
 	
 #	trackback dat가 저장될 디렉토리 만들기.
 	if(!(-e './data/trackbacks'))
@@ -961,8 +964,11 @@ sub get_all_comment ($\@\%)
 	# 페이지 개수 가져오기.
 	my $listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
 	my $content = getpage($listURL);
-	$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
-	my $pagenum = $1;
+	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
+	# <b>11802</b>개 덧글
+	$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
+	my $comment_all_num = $1;
+	my $pagenum = ($comment_all_num / 50) + 1;
 	
 #	comment dat가 저장될 디렉토리 만들기.
 	if(!(-e './data/comments'))
