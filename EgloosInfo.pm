@@ -87,7 +87,7 @@ sub getBlogInfo
 #	예제 : <li class="start"><a href="http://NoSyu5508.egloos.com">내이글루
 	my $needle1 = '<li class="start"><a href="'; # 이글루 주소
 #	예제 : <a href="http://www.egloos.com/egloo/insert.php?eid=f0012026">New Post</a>
-	my $needle2 = 'eid='; # 첫 페이지에서 숨겨진 아이디를 찾는 needle - ?가 들어가면 제대로 못 찾는다. 그래서 eid=로 처리
+	my $needle2 = '<a href="http://www.egloos.com/adm/chgadm_main.php\?eid='; # 첫 페이지에서 숨겨진 아이디를 찾는 needle - ?가 들어가면 제대로 못 찾는다.
 #	예제 : <span style="float: left;" class="subtitle4">포스트</span> <span style="float: right;">23</span><br/>
 	my $needle3 = '포스트</span> <span style="float: right;">'; # 포스트 개수를 찾는 needle
 	
@@ -95,12 +95,12 @@ sub getBlogInfo
 	my $result = BackUpEgloos_Subs::getpage($egloosurl);
 
 	# 블로그 주소를 가져온다.
-	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '">내이글루');
-		
+	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '"');
+	
 	# 블로그의 eid를 가져온다.
-	$EgloosInfo::mech->get($blogurl);
-	$result = $EgloosInfo::mech->content();
-	$eid = BackUpEgloos_Subs::findstr($result, $needle2, '">');
+	#$EgloosInfo::mech->get($blogurl);
+	#$result = $EgloosInfo::mech->content();
+	$eid = BackUpEgloos_Subs::findstr($result, $needle2, '"');
 
 	# 포스트 개수를 가져온다.
 	# 내 기억으로 포스트 개수는 코드에서 쓰지 않는 것이다.
