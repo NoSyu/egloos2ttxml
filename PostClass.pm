@@ -290,7 +290,7 @@ sub changeimgsrc($$)
 	
 	
 	# 본문 안의 이미지 다운로드
-	while($description =~ m/<img ((?:.*?) src="(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))" [^>]*)>/igc)
+	while($description =~ m/<img ((?:.*?) src="(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))"[^>]*)>/igc)
 	{
 #		예제.
 #		http://pds12.egloos.com/pds/200812/29/60/c0049460_495826383bef7.png
