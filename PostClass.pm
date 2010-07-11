@@ -59,10 +59,25 @@ sub new ($$$\%%)
 #		아마 이것도 내가 예외를 처리할 수 있게 만들어져 있을 것이다.
 #		일단 지금은 처리하지 않음.
 #		xmlrpc를 이용해서 글을 가져옴.
+RPC_XML_START:
 		my $cli = RPC::XML::Client->new($egloosinfo->{apiurl});
 #		$postid, $egloosinfo->id, $egloosinfo->apikey
 		my $req = RPC::XML::request->new('metaWeblog.getPost', $postid, $egloosinfo->{id}, $egloosinfo->{apikey});
 		my $resp = $cli->send_request($req);
+		# 날아온 값이 에러인지 아닌지 판단
+		if($resp->is_fault())
+		{
+			# 에러가 난 것임
+			BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
+			BackUpEgloos_Subs::my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
+			# 제대로 되지 않았으니 10초 후 다시 시도
+			sleep 10;
+			# 다시 시도
+			# goto인 것이 마음에 들지 않으나 한 눈에 보이는 것이니 스파게티가 되지 않을 것임.
+			# 다르게 바꾸고 싶다면 바꿔도 무방.
+			goto RPC_XML_START;
+		}
+		# 에러가 나지 않았기에 처리
 		my %result = %{$resp->value()};
 		
 #		잘못된 경우 에러를 출력하도록 한다.
@@ -339,6 +354,7 @@ sub changeimgsrc($$)
 #			에러가 발생한 것임.
 #			2009.1.22
 			BackUpEgloos_Subs::print_txt('이미지 다운로드 에러 : ' . $img_url . ' 글 : ' . $postid);
+			BackUpEgloos_Subs::print_txt("\n하지만 프로그램은 계속 진행됩니다.");
 		}
 		else
 		{
@@ -373,6 +389,7 @@ sub changeimgsrc($$)
 #			에러가 발생한 것임.
 #			2009.1.22
 			BackUpEgloos_Subs::print_txt('파일 다운로드 에러 : ' . $file_url . ' 글 : ' . $postid);
+			BackUpEgloos_Subs::print_txt("\n하지만 프로그램은 계속 진행됩니다.");
 		}
 		
 		
