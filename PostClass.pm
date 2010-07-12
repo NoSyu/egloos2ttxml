@@ -174,7 +174,8 @@ sub new ($$$\%%)
 			}
 			$time = $time->epoch();
 		}
-		BackUpEgloos_Subs::my_print("$title\n$link\n$description\n$category\n$time\n");
+		#BackUpEgloos_Subs::my_print("$title\n$link\n$description\n$category\n$time\n");
+		
 #		글 공개여부.
 		$visibility = $open_close{post};
 #		트랙백, 댓글 공개여부. 
