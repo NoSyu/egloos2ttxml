@@ -59,81 +59,18 @@ sub new ($$$\%%)
 #		아마 이것도 내가 예외를 처리할 수 있게 만들어져 있을 것이다.
 #		일단 지금은 처리하지 않음.
 #		xmlrpc를 이용해서 글을 가져옴.
-RPC_XML_START:
+#RPC_XML_START:
 		my $cli = RPC::XML::Client->new($egloosinfo->{apiurl});
 #		$postid, $egloosinfo->id, $egloosinfo->apikey
 		my $req = RPC::XML::request->new('metaWeblog.getPost', $postid, $egloosinfo->{id}, $egloosinfo->{apikey});
 		my $resp = $cli->send_request($req);
 		# 날아온 값이 에러인지 아닌지 판단
-		if($resp->is_fault())
-		{
-			# 에러가 난 것임
-			BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
-			BackUpEgloos_Subs::my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
-			# 제대로 되지 않았으니 10초 후 다시 시도
-			sleep 10;
-			# 다시 시도
-			# goto인 것이 마음에 들지 않으나 한 눈에 보이는 것이니 스파게티가 되지 않을 것임.
-			# 다르게 바꾸고 싶다면 바꿔도 무방.
-			goto RPC_XML_START;
-		}
-		# 에러가 나지 않았기에 처리
-		my %result = %{$resp->value()};
-		
-#		잘못된 경우 에러를 출력하도록 한다.
-#		대표적으로 잘못된 postid가 날아왔을 경우가 있다.
-#		에러가 나면 -1을 반환하자.
-		if(exists $result{faultString})
-		{
-			BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
-			BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
-			BackUpEgloos_Subs::print_txt('faultString : ' . $result{faultString} . " \nfaultCode : " . $result{faultCode} . "\n");
-			return -1;
-		}
-		
-#		XML-RPC를 통해 받은 정보에 따라 변수 할당.
-		$title = $result{title};
-		$link = $result{link};
-		$postid = $result{postid};
-		$description = $result{description};
-		$category = @{$result{categories}}[0];
-		
-#	&quot; -> "
-		$title =~ s/&quot;/"/ig;
-	
-		# 시간은 받고나서 TTXML 형태에 맞춰 처리.
-		$time = $result{dateCreated}; # 20070809T13:39:56		
-		$time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
-		# 시간이 리눅스와 윈도우에서 가져오는 폼이 다르다.
-		if(!$1)
-		{
-			$time =~ /(\d{4})(\d{2})(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
-			$time = DateTime->new(year => $1, month  => $2, day => $3,
-					hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
-		}
-		else
-		{
-			$time = DateTime->new(year => $1, month  => $2, day => $3,
-					hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
-		}
-		$time = $time->epoch();
-		
-		
-#		글 공개여부.
-		$visibility = $open_close{post};
-#		트랙백, 댓글 공개여부. 
-		$acceptComment = $open_close{comment};
-		$acceptTrackback = $open_close{trackback};
-		
-#		postid로 디렉토리 만들기. - 있는 경우 처리.
-		if(!(-e './data/' . $postid))
-		{
-			mkdir('./data/' . $postid) or die "폴더 만들기 에러.\n";
-		}
-		
-#		파일이 존재하지 않기에 페이지 접근.
+		# 버그 리포트에 따르면 NULL이 날아옴.
+		# BackUpEgloos_Subs::my_print($resp . "\n");
+		# 웹페이지의 자료를 가져옴.
 		my $content = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/' . $postid);
-#		<!-- egloos content start -->(.*?)<!-- egloos content end -->
+		# 파일이 존재하지 않기에 페이지 접근.
+		# <!-- egloos content start -->(.*?)<!-- egloos content end -->
 		if($content =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig)
 		{
 			$content_html = $1;
@@ -148,6 +85,109 @@ RPC_XML_START:
 			$content_html = $content;
 		}
 		
+		# XMLRPC 에러 여부 조사
+		if(! ref $resp || $resp->is_fault())
+		{
+			# 에러가 난 것임
+			BackUpEgloos_Subs::my_print("에러! : XMLRPC로 " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
+			# 예전 것. 이 방법으로도 해결이 되지 않음.
+			#BackUpEgloos_Subs::my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
+			# 제대로 되지 않았으니 10초 후 다시 시도
+			#sleep 10;
+			# 다시 시도
+			# goto인 것이 마음에 들지 않으나 한 눈에 보이는 것이니 스파게티가 되지 않을 것임.
+			# 다르게 바꾸고 싶다면 바꿔도 무방.
+			#goto RPC_XML_START;
+			
+			# 그냥 웹페이지에서 가져오자.
+			BackUpEgloos_Subs::print_txt("에러로 인해 " . $postid ."의 글을 XMLRPC가 아닌 웹페이지에서 자료를 가져옵니다.\n");
+			
+			# 변수 할당.
+			$title = BackUpEgloos_Subs::findstr($content_html, '<div class="post_title">(?:.*?)<a[^>]+?>', '<\/a>');
+			$link = $egloosinfo->{blogurl} . '/' . $postid;
+			$description = BackUpEgloos_Subs::findstr($content_html, "<div class='hentry'><span[^>]+?><\/span>", '[ ]*?<!--[ ]*?<rdf:RDF');
+			# 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
+			#	&quot; -> "
+			#	$description =~ s/&quot;/"/ig;
+			#	&lt; -> <
+			#	$description =~ s/&lt;/</ig;
+			#	&gt; -> >
+			#	$description =~ s/&gt;/>/ig;
+			#	&amp; -> &
+			#	$description =~ s/&amp;/&/ig;
+			if($content_html =~ m/<span class="post_title_category"><a[^>]+?>(.*?)<\/a>/ig)
+			{
+				$category = $1;
+			}
+			else
+			{
+				$category = '미분류';
+			}
+			# 2010/07/08 22:29
+			$time = BackUpEgloos_Subs::findstr($content_html, '<abbr class="published" title="', '">');;
+			$time =~ /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i;
+			$time = DateTime->new(year => $1, month  => $2, day => $3,
+					hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
+			$time = $time->epoch();
+		}
+		else
+		{
+			# 에러가 나지 않았기에 처리
+			# XMLRPC를 사용하여 가져옴
+			my %result = %{$resp->value()};
+			
+	#		잘못된 경우 에러를 출력하도록 한다.
+	#		대표적으로 잘못된 postid가 날아왔을 경우가 있다.
+	#		에러가 나면 -1을 반환하자.
+			if(exists $result{faultString})
+			{
+				BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
+				BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
+				BackUpEgloos_Subs::print_txt('faultString : ' . $result{faultString} . " \nfaultCode : " . $result{faultCode} . "\n");
+				return -1;
+			}
+			
+	#		XML-RPC를 통해 받은 정보에 따라 변수 할당.
+			$title = $result{title};
+			$link = $result{link};
+			$postid = $result{postid};
+			$description = $result{description};
+			$category = @{$result{categories}}[0];
+			
+	#	&quot; -> "
+			$title =~ s/&quot;/"/ig;
+		
+			# 시간은 받고나서 TTXML 형태에 맞춰 처리.
+			$time = $result{dateCreated}; # 20070809T13:39:56		
+			$time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
+			# 시간이 리눅스와 윈도우에서 가져오는 폼이 다르다.
+			if(!$1)
+			{
+				$time =~ /(\d{4})(\d{2})(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
+				$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+			}
+			else
+			{
+				$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+			}
+			$time = $time->epoch();
+		}
+		BackUpEgloos_Subs::my_print("$title\n$link\n$description\n$category\n$time\n");
+#		글 공개여부.
+		$visibility = $open_close{post};
+#		트랙백, 댓글 공개여부. 
+		$acceptComment = $open_close{comment};
+		$acceptTrackback = $open_close{trackback};
+		
+#		postid로 디렉토리 만들기. - 있는 경우 처리.
+		if(!(-e './data/' . $postid))
+		{
+			mkdir('./data/' . $postid) or die "폴더 만들기 에러.\n";
+		}
+		
+
 #		트랙백 개수 가져오기.
 #		<span class="linkback">트랙백(<span id="trbcnt4046501">1</span>)
 		if($content_html =~ m/<span class="linkback">트랙백\(<span [^>]+>(.*?)<\/span>\)/i)
@@ -353,8 +393,7 @@ sub changeimgsrc($$)
 		{
 #			에러가 발생한 것임.
 #			2009.1.22
-			BackUpEgloos_Subs::print_txt('이미지 다운로드 에러 : ' . $img_url . ' 글 : ' . $postid);
-			BackUpEgloos_Subs::print_txt("\n하지만 프로그램은 계속 진행됩니다.");
+			BackUpEgloos_Subs::print_txt('이미지 다운로드 에러 : ' . $img_url . ' 글 : ' . $postid . "\n하지만 프로그램은 계속 진행됩니다.");
 		}
 		else
 		{
@@ -388,8 +427,7 @@ sub changeimgsrc($$)
 		{
 #			에러가 발생한 것임.
 #			2009.1.22
-			BackUpEgloos_Subs::print_txt('파일 다운로드 에러 : ' . $file_url . ' 글 : ' . $postid);
-			BackUpEgloos_Subs::print_txt("\n하지만 프로그램은 계속 진행됩니다.");
+			BackUpEgloos_Subs::print_txt('파일 다운로드 에러 : ' . $file_url . ' 글 : ' . $postid . "\n하지만 프로그램은 계속 진행됩니다.");
 		}
 		
 		
