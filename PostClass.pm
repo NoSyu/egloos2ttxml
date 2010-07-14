@@ -68,7 +68,7 @@ sub new ($$$\%%)
 		# 버그 리포트에 따르면 NULL이 날아옴.
 		# BackUpEgloos_Subs::my_print($resp . "\n");
 		# 웹페이지의 자료를 가져옴.
-		my $content = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/' . $postid);
+		my $content = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/' . $postid, 0);
 		# 파일이 존재하지 않기에 페이지 접근.
 		# <!-- egloos content start -->(.*?)<!-- egloos content end -->
 		if($content =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig)
@@ -248,7 +248,7 @@ sub new ($$$\%%)
 	#				이전 댓글이 존재한다.
 	#				가져오기.
 					my $comments_src = $egloosinfo->{blogurl} . '/egloo_comment.php?eid=' . $egloosinfo->{eid} . '&srl=' . $postid . '&xhtml=1&adview=0&page=' . $1 . '&ismenu=0';
-					$comments_html = BackUpEgloos_Subs::getpage($comments_src);
+					$comments_html = BackUpEgloos_Subs::getpage($comments_src, 0);
 					
 	#				이상한 것 제거.
 	#				아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
@@ -272,7 +272,7 @@ sub new ($$$\%%)
 				while($comment_count_i > 100)
 				{
 					# 가져오기.
-					$comments_html = BackUpEgloos_Subs::getpage($comments_src . $cmt_page);
+					$comments_html = BackUpEgloos_Subs::getpage($comments_src . $cmt_page, 0);
 					
 					# 이상한 것 제거.
 					# 아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
@@ -390,7 +390,7 @@ sub changeimgsrc($$)
 		my $istr = BackUpEgloos_Subs::numtonumstr($i);
 		my $img_dest = 'data/' . $postid . '/' . $istr . '.' . $img_extension;
 #		다운로드.
-		if(-1 == BackUpEgloos_Subs::downImage($img_url, $img_dest))
+		if(-1 == BackUpEgloos_Subs::downImage($img_url, $img_dest, 0))
 		{
 #			에러가 발생한 것임.
 #			2009.1.22
@@ -424,7 +424,7 @@ sub changeimgsrc($$)
 		my $istr = BackUpEgloos_Subs::numtonumstr($i);
 		my $file_dest = 'data/' . $postid . '/' . $istr . '.' . $file_extension;
 #		다운로드.
-		if(-1 == BackUpEgloos_Subs::downImage($file_url, $file_dest))
+		if(-1 == BackUpEgloos_Subs::downImage($file_url, $file_dest, 0))
 		{
 #			에러가 발생한 것임.
 #			2009.1.22

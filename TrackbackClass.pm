@@ -47,7 +47,7 @@ sub new ($$$$$\%\@)
 	if(DateTime->compare($temp_time, $dt_today) < 0)
 	{
 #		24시간 안에 올라온 것이기에 새롭게 받는다.
-		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid);
+		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid, 0);
 #		<!-- egloos content start -->(.*?)<!-- egloos content end -->
 		$content_html =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig;
 		$content = $1;

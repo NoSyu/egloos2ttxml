@@ -92,7 +92,7 @@ sub getBlogInfo
 	my $needle3 = '포스트</span> <span style="float: right;">'; # 포스트 개수를 찾는 needle
 	
 #	이글루스 메인 페이지를 가져온다.
-	my $result = BackUpEgloos_Subs::getpage($egloosurl);
+	my $result = BackUpEgloos_Subs::getpage($egloosurl, 0);
 
 	# 블로그 주소를 가져온다.
 	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '"');
@@ -108,7 +108,7 @@ sub getBlogInfo
 	# 이유는 NoSyu.egloos.com의 경우 글 번호가 0과 -1이 있어 이글루 관리에 나오는 포스트 개수와 실제 개수가 다르다.
 	# 하지만 일단 코드를 남겨두었다. 리팩토링으로 불필요하다고 판단되면 주석처리한다.
 	my $postURL = 'http://www.egloos.com/adm/chgadm_main.php?eid=' . $eid;
-	$result = BackUpEgloos_Subs::getpage($postURL);
+	$result = BackUpEgloos_Subs::getpage($postURL, 0);
 	$post_num = BackUpEgloos_Subs::findstr($result, $needle3, '</span>');
 #	1,000개 이상이면 콤마가 붙기에 이를 제거
 	$post_num =~ s/,//g;
@@ -116,7 +116,7 @@ sub getBlogInfo
 #	블로그 제목 가져오기.
 #	예제.
 #	<title>블로그 이사준비중...</title>
-	$result = BackUpEgloos_Subs::getpage($blogurl);
+	$result = BackUpEgloos_Subs::getpage($blogurl, 0);
 	$result =~ m/<title>(.*?)<\/title>/i;
 	$blog_title = $1;
 	
@@ -139,7 +139,7 @@ sub getApiInfo
 #	예제 : http://www.egloos.com/adm/api/chgapi_info.php?eid=f0012026
 	my $pageURL = 'http://www.egloos.com/adm/basic/chgegloo_info.php?eid=' . $eid;
 	
-	my $result = BackUpEgloos_Subs::getpage($pageURL);
+	my $result = BackUpEgloos_Subs::getpage($pageURL, 0);
 	#공백을 모두 제거한다.
 	$_ = $result;
 	s/\s//g; # 여기서 띄어쓰기까지 전부 제거되기에 위에 needle이 조금 이상함.

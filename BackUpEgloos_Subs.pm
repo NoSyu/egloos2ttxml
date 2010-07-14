@@ -49,8 +49,8 @@ use vars qw(@print_text);
 # function declation.
 # 원래 이 패키지는 다른 곳에서 쓰는 함수를 모은 것이라 따로 하지 않았으나, 이 안에서 쓰이는 함수들이 순서에 맞지 않게 존재하여 이렇게 선언하였음.
 # 물론 선언과 정의를 따로 하는 것이 좋은 코딩이나 이번에는 그렇게 하지 않았기에(이유는 Perl에서는 그럴 필요가 없다고 생각했기에... 물론 틀린 얘기다.) 그것에 따라 그대로 처리하였다.
-sub getpage ($);
-sub downImage ($$);
+sub getpage ($$);
+sub downImage ($$$);
 sub print_txt ($);
 
 # 로그인 함수.
@@ -76,9 +76,9 @@ sub login_egloos ($$)
 
 
 # URL을 받아서 해당 URL에 접속하여 그 내용을 반환하는 함수.
-sub getpage ($)
+sub getpage ($$)
 {
-	my $pageurl = shift;
+	my ($pageurl, $times) = @_;
 	my $content;
 	
 #	페이지에 접근하여
@@ -98,22 +98,31 @@ sub getpage ($)
 	}
 	else
 	{
-#		제대로 된 접속이 되지 않으면 10초 후 다시 시도한다.
-		my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
-		print_txt($pageurl);
-		# 제대로 되지 않았으니 10초 후 다시 시도
-		sleep 10;
-		# 다시 시도
-		return getpage($pageurl);
+		if($times < 3)
+		{
+			#		제대로 된 접속이 되지 않으면 10초 후 다시 시도한다.
+			my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
+			#print_txt($pageurl);
+			# 제대로 되지 않았으니 10초 후 다시 시도
+			sleep 10;
+			# 다시 시도
+			return getpage($pageurl, $times + 1);
+		}
+		else
+		{
+			# 계속된 시도에도 안 된다면 이건 문제가 있음.
+			my_print("에러로 인해 더 이상의 접근이 되지 않습니다.\n" . '문제가 계속될 수 있으니 10분 가량 후에 다시 프로그램을 실행해보세요.' . "\n");
+			die;
+		}
 	}
 }
 
 
 # 본문의 이미지를 가져오는 함수
-sub downImage ($$)
+sub downImage ($$$)
 {
 #	이미지의 URL, 이미지를 저장하는 곳.
-	my ($img_src, $img_dest) = @_;
+	my ($img_src, $img_dest, $times) = @_;
 	
 #	이미 파일이 존재하면 -2을 리턴.
 	if(-e $img_dest)
@@ -136,20 +145,26 @@ sub downImage ($$)
 #			status가 404라는 말은 해당 그림이 존재하지 않는다는 뜻이다. 즉, 서버측에서 해당 이미지를 지웠을 가능성이 높다.
 #			따라서 해당 URL이 잘못되었음을 txt 파일로 저장한 다음에 -1을 반환한다.
 #			이것으로 이 함수를 호출한 함수가 에러를 처리할 수 있도록 돕는다.
-			print_txt($img_src);
+			#print_txt($img_src);
 			return -1;
 		}
 		else
 		{
-#			재시도
-			my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
-			print_txt($img_src);
-			# 제대로 되지 않았으니 10초 후 다시 시도
-			sleep 10;
-			# 다시 시도
-			downImage($img_src, $img_dest);
-			
-			return 1;
+			if($times < 3)
+			{
+#				재시도
+				my_print("그림 파일 다운로드 에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
+				# 제대로 되지 않았으니 10초 후 다시 시도
+				sleep 10;
+				# 다시 시도
+				
+				return downImage($img_src, $img_dest, $times + 1);
+			}
+			else
+			{
+				# 그냥 에러 처리
+				return -1;
+			}
 		}
 	}
 }
@@ -548,7 +563,7 @@ sub BackupPhotolog ($)
 	#	예제.
 	#	http://www.egloos.com/adm/photo/album_info.php?eid=c0049460&pg=1
 		my $albumlistURL = 'http://www.egloos.com/adm/photo/album_info.php?eid=' . $eid. '&pg=' . $i;
-		my $content = getpage($albumlistURL);
+		my $content = getpage($albumlistURL, 0);
 		
 	#	다 봤으면 종료.
 		if($content =~ m/<ul id="album_menu"><li class="white" style="cursor : default;">&nbsp;<\/li>/i)
@@ -608,7 +623,7 @@ sub BackupPhotolog ($)
 		#	예제.
 		#	http://www.egloos.com/adm/photo/photolog_list.php?eid=c0049460&key=63662
 			my $picturelistURL = 'http://www.egloos.com/adm/photo/photolog_list.php?eid=' . $eid. '&key=' . $albumid;
-			my $content = getpage($picturelistURL);
+			my $content = getpage($picturelistURL, 0);
 			
 		#	예제. - 앨범 제목.
 		#	<div id=\"abm_subject\" class=\"subject\">20081101 동래역</div>
@@ -642,7 +657,7 @@ sub BackupPhotolog ($)
 		#		이미지 저장할 경로 설정.
 				my $istr = numtonumstr($i);
 				my $img_dest = './photo/' . $albumid . '/' . $istr . '.' . $img_extension;
-				if(-1 == downImage($img_url, $img_dest))
+				if(-1 == downImage($img_url, $img_dest, 0))
 				{
 #					2009.1.22
 					print_txt('포토로그 사진 다운로드 에러 : ' . $img_url . ' 앨범 : ' . $album_subject);
@@ -737,7 +752,7 @@ sub get_all_post ($\%)
 		{
 #			파일이 없기에 가져와서 저장하기.
 			my $postlistURL = 'http://www.egloos.com/adm/post/chgpost_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-			$content = getpage($postlistURL);
+			$content = getpage($postlistURL, 0);
 			
 #			저장하기.
 			open(OUT, ">:encoding(utf8) " , $filename) or die $!;
@@ -861,7 +876,7 @@ sub get_all_trackback ($\@\%)
 	
 	# 페이지 개수 가져오기.
 	my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-	my $content = getpage($listURL);
+	my $content = getpage($listURL, 0);
 	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
 	# <b>202</b>개 트랙백
 	$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
@@ -898,7 +913,7 @@ sub get_all_trackback ($\@\%)
 		{
 #			파일이 없기에 가져와서 저장하기.
 			$listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-			$content = getpage($listURL);
+			$content = getpage($listURL, 0);
 			
 #			저장하기.
 			open(OUT, ">:encoding(utf8) " , $filename) or die $!;
@@ -963,7 +978,7 @@ sub get_all_comment ($\@\%)
 	
 	# 페이지 개수 가져오기.
 	my $listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-	my $content = getpage($listURL);
+	my $content = getpage($listURL, 0);
 	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
 	# <b>11802</b>개 덧글
 	$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
@@ -1000,7 +1015,7 @@ sub get_all_comment ($\@\%)
 		{
 #			파일이 없기에 가져와서 저장하기.
 			$listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-			$content = getpage($listURL); # 개행 없이 저장.
+			$content = getpage($listURL, 0); # 개행 없이 저장.
 			
 #			저장하기.
 			open(OUT, ">:encoding(utf8) " , $filename) or die $!;
