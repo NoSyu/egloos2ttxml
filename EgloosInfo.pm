@@ -38,6 +38,7 @@ sub new ($$$)
 #	로그인하기
 	BackUpEgloos_Subs::my_print("로그인 중...\n");
 	BackUpEgloos_Subs::login_egloos($id, $pw);
+#	로그인이 제대로 되었는지 확인하기
 #	블로그 정보 가져오기
 	BackUpEgloos_Subs::my_print("로그인 완료...\n");
 	BackUpEgloos_Subs::my_print("블로그 정보 가져오는 중...\n");

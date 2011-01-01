@@ -59,19 +59,40 @@ sub print_txt ($);
 sub login_egloos ($$)
 {
 	my ($id, $pw) = @_;
-	my $loginpage = 'http://www.egloos.com/login.php';
+	#my $loginpage = 'http://www.egloos.com/login.php';
+	my $loginpage = 'http://www.egloos.com';
 	
 #	WWW::Mechanize 라이브러리는 form 형식에 맞게 submit을 지원하기에 아주 쉽게 만들 수 있음.
 #	물론 이 방법이 아니고 무식하게 POST 방식으로 아이디와 비밀번호를 전달하여 로그인을 처리하는 php에 접속하여 로그인하는 방법도 가능하다.
 #	다만, 이것이 좀 더 깔끔해 보이기에 이렇게 처리하였다.
 #	이 함수 이후로 $EgloosInfo::mech는 로그인 된 쿠키(세션?)을 가지게 되어, 비밀글과 비밀댓글을 볼 수 있다.
 	$EgloosInfo::mech->get($loginpage);
+	
+	#$EgloosInfo::mech->submit_form(
+	#form_name => "login",
+	#fields => {
+#		userid => $id, 
+#		userpwd => $pw},
+#	button => 'lbtn');
 	$EgloosInfo::mech->submit_form(
-	form_name => "login", 
+	form_name => "authform",
 	fields => {
 		userid => $id, 
 		userpwd => $pw},
-		button => 'lbtn');
+	button => 'lbtn');
+	
+	# 로그인이 제대로 되었는지 확인
+	#my $login_ok_url = 'https://www.egloos.com/login/login_ok.php?reurl=http://www.egloos.com';
+	my $result_url = $EgloosInfo::mech->uri()->as_string;
+	if($result_url =~ m/errorno/ig)
+	{
+		my_print("로그인 에러... 아이디와 비밀번호를 확인하세요.\n");
+		die;
+	}
+	else
+	{
+		return;
+	}
 }
 
 
