@@ -182,6 +182,10 @@ while(1)
 		
 		my $all_post_count = scalar(@all_post); # all_post의 요소 개수.
 		my $how_many = 100; # 일단 100으로 할당. 후에 사용자 입력을 받도록 하자.
+		
+		#	정렬.
+		@all_post = sort { $a->{postid} cmp $b->{postid} } @all_post;
+		
 		# xml 파일을 나눌 것인지 아니면 하나로 할 것인지 사용자의 입력을 받는다.
 		if('1' eq $numbers)
 		{

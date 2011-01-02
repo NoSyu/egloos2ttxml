@@ -1189,7 +1189,6 @@ sub subsort
 	$$a{id} cmp $$b{id};
 }
 
-
 # 첨부파일 저장.
 sub attachment_file ($$)
 {
@@ -1516,7 +1515,7 @@ sub writeTTXML($$$$\@\@\@\%)
 		# xml 파일 하나로 처리.
 		# 예전 코드 그대로 사용.
 		my $ttxml_postid = 1;
-		for my $the_post (reverse(@$all_post))
+		for my $the_post (@$all_post)
 		{
 			# 포스트 하나 xml에 쓰기.
 			write_post($egloosinfo, $the_post, $xml_writer, $ttxml_postid, @$all_trackback, @$all_comment, %$postid_index);
@@ -1529,24 +1528,18 @@ sub writeTTXML($$$$\@\@\@\%)
 	else
 	{
 		# xml 파일을 나눠야 하는 경우.
-		my $start_post_index = ($number - 1) * $how_many; # start이지만, 실제로는 뒤에서부터 진행되기에 끝나야 할 시점.
-		my $cur_post_index = ($number * $how_many) - 1; # all_post 배열에서 현재 봐야 할 index
-		# 마지막 구간이라면 끝을 all_post_count - 1로 지정.
-		if($cur_post_index > $all_post_count)
-		{
-			$cur_post_index = $all_post_count - 1;
-		}
+		my $idx = ($number - 1) * 100;
+		my $end_idx = $number * 100;
 		my $the_post; # 해당 포스트.
-		# 배열 중 how_many개만큼 진행.
-		while($start_post_index <= $cur_post_index)
+		for( ; $idx < $end_idx ; $idx++)
 		{
-			$the_post = @$all_post[$cur_post_index]; # 해당 포스트.
+			$the_post = @$all_post[$idx]; # 해당 포스트.
+			
 			# 포스트 하나 xml에 쓰기.
-			write_post($egloosinfo, $the_post, $xml_writer, ($all_post_count - $cur_post_index), @$all_trackback, @$all_comment, %$postid_index);
+			write_post($egloosinfo, $the_post, $xml_writer, ($idx+1), @$all_trackback, @$all_comment, %$postid_index);
 		#	기존의 포스트 수정.
 		#	현재 쓰지 않기에 주석으로 처리.
 		#	editpost($egloosinfo, $postid, $i, $egloosinfo->{newblogurl}, $new_description);
-			$cur_post_index--;
 		}
 	}
 	my_print("모든 글과 댓글, 트랙백을 가져와서 xml에 작성하였습니다.\n\n");
