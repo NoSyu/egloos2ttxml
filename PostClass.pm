@@ -60,36 +60,22 @@ sub new ($$$\%%)
 #		일단 지금은 처리하지 않음.
 #		xmlrpc를 이용해서 글을 가져옴.
 #RPC_XML_START:
-		my $cli = RPC::XML::Client->new($egloosinfo->{apiurl});
+		#my $cli = RPC::XML::Client->new($egloosinfo->{apiurl});
 #		$postid, $egloosinfo->id, $egloosinfo->apikey
-		my $req = RPC::XML::request->new('metaWeblog.getPost', $postid, $egloosinfo->{id}, $egloosinfo->{apikey});
-		my $resp = $cli->send_request($req);
+		#my $req = RPC::XML::request->new('metaWeblog.getPost', $postid, $egloosinfo->{id}, $egloosinfo->{apikey});
+		#my $resp = $cli->send_request($req);
 		# 날아온 값이 에러인지 아닌지 판단
 		# 버그 리포트에 따르면 NULL이 날아옴.
 		# BackUpEgloos_Subs::my_print($resp . "\n");
-		# 웹페이지의 자료를 가져옴.
-		my $content = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/' . $postid, 0);
+		# 웹페이지의 자료를 가져옴. 모바일 페이지의 것을 가져옴.
+		my $content_html = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/' . $postid, 0);
 		# 파일이 존재하지 않기에 페이지 접근.
-		# <!-- egloos content start -->(.*?)<!-- egloos content end -->
-		if($content =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig)
-		{
-			$content_html = $1;
-		}
-		# 스킨 2.0
-		elsif($content =~ m/<div class="body">(.*?)<div class="post_navi">/ig)
-		{
-			$content_html = $1;
-		}
-		else
-		{
-			$content_html = $content;
-		}
 		
 		# XMLRPC 에러 여부 조사
-		if(! ref $resp || $resp->is_fault())
+		#if(! ref $resp || $resp->is_fault())
 		{
 			# 에러가 난 것임
-			BackUpEgloos_Subs::my_print("에러! : XMLRPC로 " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
+			#BackUpEgloos_Subs::my_print("에러! : XMLRPC로 " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
 			# 예전 것. 이 방법으로도 해결이 되지 않음.
 			#BackUpEgloos_Subs::my_print("에러로 인해 10초 후 다시 접근을 시도합니다.\n" . '이 문구가 계속 나타나면 스크린샷을 찍은 후 Ctrl+C를 눌러 프로그램을 종료시키세요.' . "\n");
 			# 제대로 되지 않았으니 10초 후 다시 시도
@@ -100,22 +86,12 @@ sub new ($$$\%%)
 			#goto RPC_XML_START;
 			
 			# 그냥 웹페이지에서 가져오자.
-			BackUpEgloos_Subs::print_txt("에러로 인해 " . $postid ."의 글을 XMLRPC가 아닌 웹페이지에서 자료를 가져옵니다.\n");
+			#BackUpEgloos_Subs::print_txt("에러로 인해 " . $postid ."의 글을 XMLRPC가 아닌 웹페이지에서 자료를 가져옵니다.\n");
 			
-			# 변수 할당.
-			$title = BackUpEgloos_Subs::findstr($content_html, '<div class="post_title">(?:.*?)<a[^>]+?>', '<\/a>');
+			$title = BackUpEgloos_Subs::findstr($content_html, '<div class="subject"><h3>(?:<img[^>]*> )?', '</h3>');
 			$link = $egloosinfo->{blogurl} . '/' . $postid;
-			$description = BackUpEgloos_Subs::findstr($content_html, "<div class='hentry'><span[^>]+?><\/span>", '[ ]*?<!--[ ]*?<rdf:RDF');
-			# 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
-			#	&quot; -> "
-			#	$description =~ s/&quot;/"/ig;
-			#	&lt; -> <
-			#	$description =~ s/&lt;/</ig;
-			#	&gt; -> >
-			#	$description =~ s/&gt;/>/ig;
-			#	&amp; -> &
-			#	$description =~ s/&amp;/&/ig;
-			if($content_html =~ m/<span class="post_title_category"><a[^>]+?>(.*?)<\/a>/ig)
+			$description = BackUpEgloos_Subs::findstr($content_html, '<div class="contents">', '<div class="wrap_tag">');
+			if($content_html =~ m/<span class="cate"><a [^>]+>(.*?)<\/a>/ig)
 			{
 				$category = $1;
 			}
@@ -123,57 +99,70 @@ sub new ($$$\%%)
 			{
 				$category = '미분류';
 			}
-			# 2010/07/08 22:29
-			$time = BackUpEgloos_Subs::findstr($content_html, '<abbr class="published" title="', '">');;
+			# <span class="name">dongdm</span> 2010/12/30 23:41                </p>
+			# <span class="name">dongdm</span> 1시간전                </p>
+			# 이런 것도 있기에 난감. 그냥 저런 건 00:00으로 처리한다.
+			$time = BackUpEgloos_Subs::findstr($content_html, '<span class="name">(?:.*?)</span>', '</p>');
 			$time =~ /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i;
-			$time = DateTime->new(year => $1, month  => $2, day => $3,
-					hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
-			$time = $time->epoch();
-		}
-		else
-		{
-			# 에러가 나지 않았기에 처리
-			# XMLRPC를 사용하여 가져옴
-			my %result = %{$resp->value()};
-			
-	#		잘못된 경우 에러를 출력하도록 한다.
-	#		대표적으로 잘못된 postid가 날아왔을 경우가 있다.
-	#		에러가 나면 -1을 반환하자.
-			if(exists $result{faultString})
+			if(!$5)
 			{
-				BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
-				BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
-				BackUpEgloos_Subs::print_txt('faultString : ' . $result{faultString} . " \nfaultCode : " . $result{faultCode} . "\n");
-				return -1;
-			}
-			
-	#		XML-RPC를 통해 받은 정보에 따라 변수 할당.
-			$title = $result{title};
-			$link = $result{link};
-			$postid = $result{postid};
-			$description = $result{description};
-			$category = @{$result{categories}}[0];
-			
-	#	&quot; -> "
-			$title =~ s/&quot;/"/ig;
-		
-			# 시간은 받고나서 TTXML 형태에 맞춰 처리.
-			$time = $result{dateCreated}; # 20070809T13:39:56
-			$time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
-			# 시간이 리눅스와 윈도우에서 가져오는 폼이 다르다.
-			if(!$6)
-			{
-				$time =~ /(\d{4})(\d{2})(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
+				# 1시간전 이런 식임.
+				$open_close{datetime_info} =~ /(\d{4})\/(\d{2})\/(\d{2})/i;
 				$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+				BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근이라 시간 정보가 명확하지 않습니다.\n그렇기에 글이 적힌 시각이 0시 0분 0초로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
 			}
 			else
 			{
 				$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+					hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
 			}
 			$time = $time->epoch();
 		}
+#		else
+#		{
+#			# 에러가 나지 않았기에 처리
+#			# XMLRPC를 사용하여 가져옴
+#			my %result = %{$resp->value()};
+#			
+#	#		잘못된 경우 에러를 출력하도록 한다.
+#	#		대표적으로 잘못된 postid가 날아왔을 경우가 있다.
+#	#		에러가 나면 -1을 반환하자.
+#			if(exists $result{faultString})
+#			{
+#				BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 글을 가져오는데 에러가 났습니다.\n");
+#				BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
+#				BackUpEgloos_Subs::print_txt('faultString : ' . $result{faultString} . " \nfaultCode : " . $result{faultCode} . "\n");
+#				return -1;
+#			}
+#			
+#	#		XML-RPC를 통해 받은 정보에 따라 변수 할당.
+#			$title = $result{title};
+#			$link = $result{link};
+#			$postid = $result{postid};
+#			$description = $result{description};
+#			$category = @{$result{categories}}[0];
+#			
+#	#	&quot; -> "
+#			$title =~ s/&quot;/"/ig;
+#		
+#			# 시간은 받고나서 TTXML 형태에 맞춰 처리.
+#			$time = $result{dateCreated}; # 20070809T13:39:56
+#			$time =~ /(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
+#			# 시간이 리눅스와 윈도우에서 가져오는 폼이 다르다.
+#			if(!$6)
+#			{
+#				$time =~ /(\d{4})(\d{2})(\d{2})T(\d{2}):(\d{2}):(\d{2})/i;
+#				$time = DateTime->new(year => $1, month  => $2, day => $3,
+#						hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+#			}
+#			else
+#			{
+#				$time = DateTime->new(year => $1, month  => $2, day => $3,
+#						hour => $4, minute => $5, second => $6, time_zone => 'Asia/Seoul');
+#			}
+#			$time = $time->epoch();
+#		}
 		#BackUpEgloos_Subs::my_print("$title\n$link\n$description\n$category\n$time\n");
 		
 #		글 공개여부.
@@ -181,48 +170,15 @@ sub new ($$$\%%)
 #		트랙백, 댓글 공개여부. 
 		$acceptComment = $open_close{comment};
 		$acceptTrackback = $open_close{trackback};
+#		트랙백, 댓글 개수
+		$trackback_count = $open_close{trackback_cnt};
+		$comment_count = $open_close{comment_cnt};
 		
 #		postid로 디렉토리 만들기. - 있는 경우 처리.
 		if(!(-e './data/' . $postid))
 		{
 			mkdir('./data/' . $postid) or die "폴더 만들기 에러.\n";
 		}
-		
-
-#		트랙백 개수 가져오기.
-#		<span class="linkback">트랙백(<span id="trbcnt4046501">1</span>)
-		if($content_html =~ m/<span class="linkback">트랙백\(<span [^>]+>(.*?)<\/span>\)/i)
-		{
-			$trackback_count = $1;
-		}
-		# 스킨 2.0
-		# <a class="post_tail_trbk">트랙백(<span id="trbcnt2500689" class="count">2</span>)</a>
-		elsif($content_html =~ m/<a class="post_tail_trbk">트랙백\(<span [^>]+>(.*?)<\/span>\)/i)
-		{
-			$trackback_count = $1;
-		}
-		else
-		{
-			$trackback_count = 0;
-		}
-		
-#		댓글 개수 가져오기.
-#		<span class="linkback">덧글(<span id="cmtcnt4794508">10</span>)
-		if($content_html =~ m/<span class="linkback">덧글\(<span [^>]+>(.*?)<\/span>\)/i)
-		{
-			$comment_count = $1;
-		}
-		# 스킨 2.0
-		# <a class="post_tail_cmmt"> 덧글(<span id="cmtcnt2500689" class="count">4</span>)</a>
-		elsif($content_html =~ m/<a class="post_tail_cmmt"> 덧글\(<span [^>]+>(.*?)<\/span>\)/i)
-		{
-			$comment_count = $1;
-		}
-		else
-		{
-			$comment_count = 0;
-		}
-		
 		
 #		이전 댓글이 있는지 확인하여 있으면 content_html에 추가한다. - 2009-1-13
 #		즉, 한 글에 댓글 100개 이상이면 이글루스는 댓글의 내용을 잘라서 보여준다.
@@ -236,58 +192,57 @@ sub new ($$$\%%)
 #		예제.
 #		<a href="#" onclick="cmtview_more('3668037','b0006600','1',2, 0, this); return false;">이전 덧글 100개 더보기</a>
 #		댓글의 개수가 100개 이상이면...
-		if($comment_count > 100)
+
+		my $get_data_html;
+		
+		# 모바일을 이용하기에 모든 댓글과 트랙백을 여기에 붙인다.
+		# 스킨 2.0
+		# http://dongdm.egloos.com/egloo_feedback.php?eid=a0030011&ismain=&page=2&srl=2500684&type=post_comment&xhtml=1
+		my $comment_count_i = $comment_count;
+		my $cmt_page = 1;
+		my $comments_src = $egloosinfo->{blogurl} . '/egloo_feedback.php?eid=' . $egloosinfo->{eid} . '&ismain=&type=post_comment&xhtml=1&srl=' . $postid . '&page=';
+		
+		while($comment_count_i > 0)
 		{
-			my $comments_html = $content_html;
+			# 가져오기.
+			$get_data_html = BackUpEgloos_Subs::getpage($comments_src . $cmt_page, 0);
 			
-			# 예전 것.
-			if($comments_html =~ m/<a href="#" onclick="cmtview_more\('$postid','$egloosinfo->{eid}','1',(\d{1,2}), 0, this\); return false;">이전 덧글/i)
-			{
-				while($comments_html =~ m/<a href="#" onclick="cmtview_more\('$postid','$egloosinfo->{eid}','1',(\d{1,2}), 0, this\); return false;">이전 덧글/i)
-				{
-	#				이전 댓글이 존재한다.
-	#				가져오기.
-					my $comments_src = $egloosinfo->{blogurl} . '/egloo_comment.php?eid=' . $egloosinfo->{eid} . '&srl=' . $postid . '&xhtml=1&adview=0&page=' . $1 . '&ismenu=0';
-					$comments_html = BackUpEgloos_Subs::getpage($comments_src, 0);
-					
-	#				이상한 것 제거.
-	#				아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
-					$comments_html =~ s/\\"(.*?)\\"/"$1"/ig;
-					$comments_html =~ s/\\'(.*?)\\'/'$1'/ig;
-					
-	#				붙이기.
-	#				기존의 것과 연결해서 붙여넣기.
-					$content_html = $content_html . $comments_html;
-				}
-			}
-			# 스킨 2.0
-			# http://dongdm.egloos.com/egloo_feedback.php?eid=a0030011&ismain=&page=2&srl=2500684&type=post_comment&xhtml=1
-			else
-			{
-				my $comments_html;
-				my $comment_count_i = $comment_count;
-				my $cmt_page = 2;
-				my $comments_src = $egloosinfo->{blogurl} . '/egloo_feedback.php?eid=' . $egloosinfo->{eid} . '&ismain=&type=post_comment&xhtml=1&srl=' . $postid . '&page=';
-				
-				while($comment_count_i > 100)
-				{
-					# 가져오기.
-					$comments_html = BackUpEgloos_Subs::getpage($comments_src . $cmt_page, 0);
-					
-					# 이상한 것 제거.
-					# 아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
-					$comments_html =~ s/\\"(.*?)\\"/"$1"/ig;
-					$comments_html =~ s/\\'(.*?)\\'/'$1'/ig;
-					
-					# 붙이기.
-					# 기존의 것과 연결해서 붙여넣기.
-					$content_html = $content_html . $comments_html;
-					
-					# 루프 다음 것 처리.
-					$comment_count_i -= 100;
-					$cmt_page++;
-				}				
-			}
+			# 이상한 것 제거.
+			# 아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
+			$get_data_html =~ s/\\"(.*?)\\"/"$1"/ig;
+			$get_data_html =~ s/\\'(.*?)\\'/'$1'/ig;
+			
+			# 붙이기.
+			# 기존의 것과 연결해서 붙여넣기.
+			$content_html = $content_html . $get_data_html;
+			
+			# 루프 다음 것 처리.
+			$comment_count_i -= 100;
+			$cmt_page++;
+		}
+		
+		# 트랙백 가져와서 붙이기			
+		my $trackback_count_i = $trackback_count;
+		$cmt_page = 1;
+		my $trackback_src = $egloosinfo->{blogurl} . '/egloo_feedback.php?eid=' . $egloosinfo->{eid} . '&ismain=&type=post_trackback&xhtml=1&srl=' . $postid . '&page=';
+		
+		while($trackback_count_i > 0)
+		{
+			# 가져오기.
+			$get_data_html = BackUpEgloos_Subs::getpage($trackback_src . $cmt_page, 0);
+			
+			# 이상한 것 제거.
+			# 아마도 DB에 저장할 때 escape 문자를 처리하는 함수를 돌려 저장한 후, 이를 가져올 때는 그것들을 제거하지 않은 듯싶다. 따라서 여기서 제거한다.
+			$get_data_html =~ s/\\"(.*?)\\"/"$1"/ig;
+			$get_data_html =~ s/\\'(.*?)\\'/'$1'/ig;
+			
+			# 붙이기.
+			# 기존의 것과 연결해서 붙여넣기.
+			$content_html = $content_html . $get_data_html;
+			
+			# 루프 다음 것 처리.
+			$trackback_count_i -= 100;
+			$cmt_page++;
 		}
 		
 #		xml에 쓸 수 없는 글자가 있는 경우 일단 점으로 바꾼다.

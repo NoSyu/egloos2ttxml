@@ -21,11 +21,12 @@ my $post_num; # 포스트 개수 얻는 함수 ; getBlogInfo()
 my $blog_title; # 블로그 제목.
 my $author; # 블로거 이름.
 #my @postid_arr; # postid들의 배열. 처음에는 postid 배열을 가지고 백업하였으나 이제는 그렇게 하지 않기에 주석으로 처리하였음.
-my $post_count = 0; # 가지고 있는 포스트의 개수
+my $post_count; # 가지고 있는 포스트의 개수
 #my $img_host_url; # 이미지를 옮길 URL. 처음에는 플릭커나 피카사에 그림을 올려 개인 계정에서도 무리 없이 사용하려고 하였으나 상당히 복잡했음.
 # 피카사의 경우 외부에서 사진을 직접 접근하는 것은 허락되지 않는 듯싶었고, 플릭커의 경우 업로드 라이브러리가 있었으나 조금 복잡했음. 물론 오픈소스라 코드를 수정해서 만들 수 있었음. 하지만 결정적으로 외국 서버라 너무 느림.
 # 따라서 그냥 xml 파일에 attachment로 파일을 붙이기로 함. 
-
+my $trackback_count;
+my $comment_count;
 
 #생성자
 sub new ($$$)
@@ -41,6 +42,8 @@ sub new ($$$)
 #	로그인이 제대로 되었는지 확인하기
 #	블로그 정보 가져오기
 	BackUpEgloos_Subs::my_print("로그인 완료...\n");
+	# 암호 변수 제거
+	$pw = 0;
 	BackUpEgloos_Subs::my_print("블로그 정보 가져오는 중...\n");
 	getBlogInfo();
 #	블로그 API 주소 가져오기
@@ -61,7 +64,8 @@ sub new ($$$)
 #	변수 등록. 자세한 것은 생략.
 	my $self = { apikey=>$apikey, apiurl=>$apiurl,
 		blogurl=>$blogurl, eid=>$eid, post_num=>$post_num,
-		id=>$id, blog_title=>$blog_title, author=>$author, newblogurl=>$newblogurl};
+		id=>$id, blog_title=>$blog_title, author=>$author, newblogurl=>$newblogurl,
+		post_count=>$post_count, trackback_count=>$trackback_count, comment_count=>$comment_count};
 #	referencing
 	bless ($self, $class);
 	

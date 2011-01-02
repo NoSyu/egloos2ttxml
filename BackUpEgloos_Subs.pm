@@ -9,6 +9,7 @@ use Carp;
 use CommentClass;
 use TrackbackClass;
 use PostClass;
+#use PostClass_m;
 
 # cpan 라이브러리.
 use WWW::Mechanize;  # 웹페이지에 접근하는 아주 훌륭한 라이브러리.
@@ -37,6 +38,7 @@ write_trackbacks
 write_post
 BackupPhotolog
 editpost
+get_all_list
 get_all_post
 get_all_trackback
 get_all_comment
@@ -113,7 +115,8 @@ sub getpage ($$)
 		
 # 		공백 없애기
 		$content =~ s/[\n\r\t]//g;
-	
+		$content =~ s/>( )+</></g;
+		
 #		반환
 		return $content;
 	}
@@ -341,41 +344,23 @@ sub write_post ($$$$\@\@\%)
 	$xml_writer->endTag("category");
 	
 	# tag : 태그 - 있는 만큼 태그로 만든다.
+	# <ul class="tag"><li><a href="/m/tag/%ED%83%9C%EA%B7%B8">태그</a></li><li><a href="/m/tag/%ED%83%9C%EA%B7%B81">태그1</a></li><li class="last"><a href="/m/tag/%ED%83%9C%EA%B7%B82">태그2</a></li></ul>
 	my @tags; # 태그.
 	# 본문 부분 가져오기
+	my $page = $the_post->{content_html};
+	if($page =~ m/<ul class="tag">(.+?)<\/ul>/g)
 	{
-		my $page = $the_post->{content_html};
-		if($page =~ m/<div class="posttaglist">(.+?)<\/div>/g)
+		my $tag_html = $1;
+		# 예제 : 주민등록번호,&nbsp;도용,&nbsp;탈퇴,&nbsp;웹사이트,&nbsp;사이트
+		$tag_html =~ s/<li(?:[^>]*)><a href="[^"]+">(.*?)<\/a><\/li>/$1<>/ig;
+		@tags = split /<>/, $tag_html;
+		
+		# tags 변수 안에 있는 것을 xml에 하나씩 쓰기.
+		foreach (@tags)
 		{
-			my $tag_html = $1;
-			# 예제 : 주민등록번호,&nbsp;도용,&nbsp;탈퇴,&nbsp;웹사이트,&nbsp;사이트
-			$tag_html =~ s/<a href="[^"]+" rel="tag">(.*?)<\/a>/$1/ig;
-			@tags = split /,\&nbsp;/, $tag_html;
-			
-#			tags 변수 안에 있는 것을 xml에 하나씩 쓰기.
-			foreach (@tags)
-			{
-				$xml_writer->startTag("tag");
-				$xml_writer->characters($_);
-				$xml_writer->endTag("tag");
-			}
-		}
-#		스킨 2.0			2010.01.16
-#		<div class="post_taglist f_clear"><strong>태그 : </strong><a href="/tag/굿포유" rel="tag">굿포유</a>, <a href="/tag/kkk" rel="tag">kkk</a></div>
-		elsif($page =~ m/<div class="post_taglist f_clear"><strong>태그 : <\/strong>(.+?)<\/div>/g)
-		{
-			my $tag_html = $1;
-			# 예제 : 주민등록번호,&nbsp;도용,&nbsp;탈퇴,&nbsp;웹사이트,&nbsp;사이트
-			$tag_html =~ s/<a href="[^"]+" rel="tag">(.*?)<\/a>/$1/ig;
-			@tags = split /,\&nbsp;/, $tag_html;
-			
-#			tags 변수 안에 있는 것을 xml에 하나씩 쓰기.
-			foreach (@tags)
-			{
-				$xml_writer->startTag("tag");
-				$xml_writer->characters($_);
-				$xml_writer->endTag("tag");
-			}	
+			$xml_writer->startTag("tag");
+			$xml_writer->characters($_);
+			$xml_writer->endTag("tag");
 		}
 	}
 	
@@ -738,6 +723,98 @@ sub editpost ($$$$$)
 #	$o->editPost($postid, $post, 1);
 }
 
+# 모든 글, 트랙백, 댓글 가져와서 저장하기.
+sub get_all_list ($)
+{
+	my ($egloosinfo) = @_;
+	my $i; # 리스트 페이지 넘버.
+	
+	# dat가 저장될 디렉토리 만들기.
+	if(!(-e './data/posts'))
+	{
+		mkdir('./data/posts') or die "폴더 만들기 에러.\n";
+	}
+	
+	$i = 1;
+	
+	# 페이지 개수 가져오기.
+	my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+	my $content = getpage($listURL, 0);
+	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
+	# <b>202</b>개 트랙백
+	$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
+	my $trackback_all_num = $1;
+	my $pagenum = ($trackback_all_num / 50) + 1;
+	$egloosinfo->{trackback_count} = $trackback_all_num;
+	
+#	trackback dat가 저장될 디렉토리 만들기.
+	if(!(-e './data/trackbacks'))
+	{
+		mkdir('./data/trackbacks') or die "폴더 만들기 에러.\n";
+	}
+	
+	# 트랙백들을 가져오기.
+	for($i = 1 ; $i <= $pagenum ; $i++)
+	{
+#		파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-13
+		my $filename = 'data/trackbacks/' . numtonumstr($i) . '.dat';
+		my $the_trackback; # 아마도 최적화가 되지 않을까?
+		if(!(-e $filename))
+		{
+#			파일이 없기에 가져와서 저장하기.
+			$listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$content = getpage($listURL, 0);
+			
+#			저장하기.
+			open(OUT, ">:encoding(utf8) " , $filename) or die $!;
+			print OUT $content;
+			close(OUT);
+		}
+	}
+	my_print("트랙백 리스트 다운로드 완료...\n");
+	
+	# 댓글 리스트 가져오기 
+	$i = 1;
+	
+	# 페이지 개수 가져오기.
+	$listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+	$content = getpage($listURL, 0);
+	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
+	# <b>11802</b>개 덧글
+	$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
+	my $comment_all_num = $1;
+	$pagenum = ($comment_all_num / 50) + 1;
+	$egloosinfo->{comment_count} = $comment_all_num;
+	
+#	comment dat가 저장될 디렉토리 만들기.
+	if(!(-e './data/comments'))
+	{
+		mkdir('./data/comments') or die "폴더 만들기 에러.\n";
+	}
+	
+	# 덧글들을 가져오기.
+	for($i = 1 ; $i <= $pagenum ; $i++)
+	{
+#		파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-13
+		my $filename = 'data/comments/' . numtonumstr($i) . '.dat';
+		my $the_comment;
+		if(!(-e $filename))
+		{
+#			파일이 없기에 가져와서 저장하기.
+			$listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$content = getpage($listURL, 0); # 개행 없이 저장.
+			
+#			저장하기.
+			open(OUT, ">:encoding(utf8) " , $filename) or die $!;
+			print OUT $content;
+			close(OUT);
+		}
+	}
+	
+	my_print("댓글 리스트 다운로드 완료...\n");
+}
+
+
 
 # 모든 글 가져와서 저장하기.
 sub get_all_post ($\%)
@@ -831,7 +908,12 @@ sub get_all_post ($\%)
 				{
 					$open_close{trackback} = 1;
 				}
-								
+#				시간 정보 - 1시간 전이라는 식으로 나와있는 경우가 있기에....
+				$open_close{datetime_info} = findstr($post_field, '<td width="80" align="center" class="black">', '</td>');
+#				댓글과 트랙백의 개수도 여기에 적습니다.
+				$open_close{comment_cnt} = findstr($post_field, '<td width="45" align="center" class="black">', '</td>');
+				$open_close{trackback_cnt} = findstr($post_field, '<td width="50" align="center" class="black">', '</td></tr>');
+						
 #				파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-11
 #				여기서 말하는 파일은 post에 대한 정보가 담겨져있는 content.xml을 말함.
 #				이 파일은 PostClass를 만든 후 즉, 안의 그림파일이나 첨부파일을 다 다운로드 받은 후 저장되기에 이 파일이 존재한다는 말은 제대로 다 받았다는 것을 의미한다.
@@ -852,7 +934,7 @@ sub get_all_post ($\%)
 				{
 #					파일이 존재하지 않기에 새롭게 만들기.
 #					post 변수 생성.
-					$the_post = PostClass->new($postid, $egloosinfo, 0, 0, %open_close );
+					$the_post = PostClass->new($postid, $egloosinfo, 0, 0, %open_close);
 					
 #					xml 파일 쓰기.
 					write_post_xml($filename, $the_post);
@@ -894,14 +976,16 @@ sub get_all_trackback ($\@\%)
 	my ($egloosinfo, $all_post, $postid_index) = @_;
 	my @all_trackback;
 	my $i = 1;
+	my $listURL;
+	my $content;
 	
 	# 페이지 개수 가져오기.
-	my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-	my $content = getpage($listURL, 0);
+	#my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+	#my $content = getpage($listURL, 0);
 	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
 	# <b>202</b>개 트랙백
-	$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
-	my $trackback_all_num = $1;
+	#$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
+	my $trackback_all_num = $egloosinfo->{trackback_count};
 	my $pagenum = ($trackback_all_num / 50) + 1;
 	
 #	trackback dat가 저장될 디렉토리 만들기.
@@ -996,14 +1080,16 @@ sub get_all_comment ($\@\%)
 	my ($egloosinfo, $all_post, $postid_index) = @_;
 	my @all_comment;
 	my $i = 1;
+	my $listURL;
+	my $content;
 	
 	# 페이지 개수 가져오기.
-	my $listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-	my $content = getpage($listURL, 0);
+	#my $listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+	#my $content = getpage($listURL, 0);
 	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
 	# <b>11802</b>개 덧글
-	$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
-	my $comment_all_num = $1;
+	#$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
+	my $comment_all_num = $egloosinfo->{comment_count};
 	my $pagenum = ($comment_all_num / 50) + 1;
 	
 #	comment dat가 저장될 디렉토리 만들기.
@@ -1474,3 +1560,496 @@ sub writeTTXML($$$$\@\@\@\%)
 	# 파일 핸들 닫기.
 	$output->close();
 }
+
+__END__
+
+# 모든 글 가져와서 저장하기.
+sub m_get_all_post_trackback_comment ($)
+{
+	my ($egloosinfo) = @_;
+	my @all_post;
+	my $i; # 리스트 페이지 넘버.
+	my $p_index = 0;
+	
+	# 디렉토리 만들기.
+	if(!(-e './data/mobile'))
+	{
+		mkdir('./data/mobile') or die "폴더 만들기 에러.\n";
+	}
+	
+	# post list들을 가져오기.
+	for($i = 1 ; ; $i++)
+	{
+		my $content;
+		
+#		파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-31
+		my $filename = 'data/mobile/post_list/' . numtonumstr($i) . '.dat';
+		if(-e $filename)
+		{
+#			dat 파일이 존재하기에 불러오기.
+#			파일 읽기. - editpost 함수에서 사용..
+			$/ = undef;
+			open (DESIN, "<:encoding(utf8)", $filename) or die $!;
+			$content = <DESIN>;
+			close(DESIN);
+		}
+		else
+		{
+#			파일이 없기에 가져와서 저장하기.
+			my $postlistURL = 'http://www.egloos.com/adm/post/chgpost_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$content = getpage($postlistURL, 0);
+			
+#			저장하기.
+			open(OUT, ">:encoding(utf8) " , $filename) or die $!;
+			print OUT $content;
+			close(OUT);
+		}
+		
+		#	리스트를 끝까지 다 봤으면 종료.
+		if($content =~ m/해당 자료가 존재하지 않습니다./i)
+		{
+			last;
+		}
+		
+#		postid 찾아서 저장
+		my @post_fields = split /<tr bgcolor=/, $content;
+		shift @post_fields; # 처음 것 제거.
+		
+#		post 하나씩 가져오기.
+		for my $post_field (@post_fields)
+		{
+			my $start_needle = '<td width="360" class="black"><a href="' . $egloosinfo->{blogurl} . '/';
+			my $postid = findstr($post_field, $start_needle, '"');
+#			postid를 제대로 찾았다면 나머지 것도 얻는다.
+			if(-1 != $postid)
+			{
+				my %open_close; # 글, 트랙백과 덧글의 공개여부. PostClass 안에서 처리할 수 있으나 관리 페이지에 나오는 것이 좀 더 깔끔하게 처리할 수 있어 이렇게 hash로 만든 후 인자로 전달.
+				
+#				글 공개여부.
+				$start_needle = '<img src="http://md.egloos.com/img/eg/post_security1.gif"';
+				if($post_field =~ m/$start_needle/i)
+				{
+					$open_close{post} = 'private';
+				}
+				else
+				{
+					$open_close{post} = 'public';
+				}
+#				덧글 공개여부
+				$start_needle = '<td width="45" align="center" class="red">x</td>';
+				if($post_field =~ m/$start_needle/i)
+				{
+					$open_close{comment} = 0;
+				}
+				else
+				{
+					$open_close{comment} = 1;
+				}
+#				트랙백 공개여부.
+				$start_needle = '<td width="50" align="center" class="red">x</td>';
+				if($post_field =~ m/$start_needle/i)
+				{
+					$open_close{trackback} = 0;
+				}
+				else
+				{
+					$open_close{trackback} = 1;
+				}
+#				시간 정보 - 1시간 전이라는 식으로 나와있는 경우가 있기에....
+				$open_close{datetime_info} = findstr($post_field, '<td width="80" align="center" class="black">', '<\/td>');
+#				댓글과 트랙백의 개수도 여기에 적습니다.
+				$open_close{comment_cnt} = findstr($post_field, '<td width="45" align="center" class="black">', '<\/td>');
+				$open_close{trackback_cnt} = findstr($post_field, '<td width="50" align="center" class="black">', '<\/td><\/tr>');
+						
+#				파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-11
+#				여기서 말하는 파일은 post에 대한 정보가 담겨져있는 content.xml을 말함.
+#				이 파일은 PostClass를 만든 후 즉, 안의 그림파일이나 첨부파일을 다 다운로드 받은 후 저장되기에 이 파일이 존재한다는 말은 제대로 다 받았다는 것을 의미한다.
+				my $filename = 'data/mobile/' . $postid . '/content.xml';
+				my $the_post; # 해당 포스트 클래스 임시 변수.
+				my $content_all; # 만약 xml 파일이 존재한다면 이를 hash로 읽어들여 처리한다.
+				if(!(-e $filename))
+				{
+#					파일이 존재하지 않기에 새롭게 만들기.					
+#					post 변수 생성.
+					$the_post = PostClass_m->new($postid, $egloosinfo, 0, 0, %open_close );
+					
+					#	xml 파일 만들기.
+					my $output = new IO::File(">" . $filename);
+					my $xml_writer = new XML::Writer(OUTPUT => $output, ENCODING => 'utf-8', DATA_MDE => 1, DATA_INDENT => 4);
+					$xml_writer->xmlDecl("UTF-8");
+					
+					write_post($egloosinfo, $the_post, $xml_writer, $ttxml_postid, @$all_trackback, @$all_comment, %$postid_index);
+					
+#					xml 파일 쓰기.
+					#write_post_xml($filename, $the_post);
+				}
+
+#				배열에 글 정보 저장.
+				push @all_post, $the_post;
+				
+#				배열 index 저장.
+#				해당 이글루스 포스트 아이디를 key로 하여 그 value를 all_post의 index로 하였다.
+#				이것으로 이글루스 포스트 아이디로 all post 몇 번째에 있는지 알 수 있다.
+				#$postid_index->{$the_post->{postid}} = $p_index;
+				#$p_index++; # 배열 인덱스 증가.
+				
+#				처리 완료 문구 출력.
+#				사실 이 출력을 만들기 전에 하는 것이 디버깅하기에 편하나 만들어야 정보를 얻을 수 있고 그 정보를 출력할 수 있기에 앞뒤가 맞지 않게 된다. 따라서 완료 후에 해당 정보를 출력하게 할 수밖에 없다. 이 파라독스를 해결할 수 있는 방법이 있을까?
+				my_print("URL : " . $egloosinfo->{blogurl} . "/" . $postid . " - 제목 : " . $the_post->{title} . "\n");
+			} # end of  if(-1 != $postid)
+			else
+			{
+#				2009-1-13 - 버그잡기용으로 추가.
+#				하도 버그가 많이 나와서 if 문에 else문을 붙여 버그를 잡아보자는 생각에 형식상으로 하나 만들었다.
+#				하지만 아직 여기에 대해 리포트가 된 적은 없다.
+				my_print("get_all_post 함수에서 postid를 찾지 못했습니다.\n");
+				my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
+				print_txt("BackUpEgloos_Subs__get_all_post\n\n" . $egloosinfo->{blogurl} . "\n\n" . $post_field . "\n\n" . $content); # 디버그용.
+				die;
+			}
+		} # end of  for my $post_field (@post_fields)
+	} # end of  for($i = 1 ; ; $i++)
+	
+	return @all_post; # all_post 배열 반환.
+}
+
+# xml파일에 post 들을 적는 함수.
+# main.pl에서 이 함수를 호출하여 post들을 xml 파일에 적는다.
+sub m_write_post ($$$$\@\@\%)
+{
+#	이글루스 정보, 처리해야 할 post(PostClass form), xml을 적을 수 있는 핸들러, Textcube에서 쓰일 post id, trackback 들, comment들, post 배열을 추적할 수 있는 hash table  
+	my ($egloosinfo, $the_post, $xml_writer,
+		$id, $all_trackback, $all_comment, $postid_index) = @_;
+	
+	# ----------------------------------------------------------------------------- #
+	#	xml에 Post 태그를 시작합니다.
+	# ----------------------------------------------------------------------------- #
+	# Post 태그 시작하기
+	$xml_writer->startTag("post", "slogan" => $the_post->{title});
+	
+	# ----------------------------------------------------------------------------- #
+	#	Post 제목과 내용 등을 처리합니다.
+	#	댓글과 트랙백은 밑에서 처리합니다.
+	# ----------------------------------------------------------------------------- #
+	# title : 제목
+	$xml_writer->startTag("title");
+	$xml_writer->characters($the_post->{title});
+	$xml_writer->endTag("title");
+	
+	# id : 글의 번호
+	$xml_writer->startTag("id");
+	$xml_writer->characters($id);
+	$xml_writer->endTag("id");
+	
+	# visibility : 공개여부
+	$xml_writer->startTag("visibility");
+	$xml_writer->characters($the_post->{visibility});
+	$xml_writer->endTag("visibility");
+	
+	# location : 지역 태그 - 이글루스에는 이런 태그가 없음.
+	$xml_writer->startTag("location");
+	$xml_writer->characters('/');
+	$xml_writer->endTag("location");
+	
+	# password : 비밀번호 라고 해석되나 정확하게 무엇인지 모름. 역시 이글루스에는 없음.\
+	# 그렇다고 아무거나 넣으면 쉽게 뚫릴 듯싶어 그것은 좋지 않다고 판단.
+	# 그래서 그냥 현재 시각을 인자로 하여 md5 함수를 돌린 값을 넣었음.
+	# 그러하여도 삭제나 수정은 잘 되는 것을 확인.
+	$xml_writer->startTag("password");
+	$xml_writer->characters(md5_base64(time));
+	$xml_writer->endTag("password");
+	
+	# acceptComment : 댓글을 적을 수 있는지인지... 여튼 비슷한 것인 듯싶다.
+	$xml_writer->startTag("acceptComment");
+	$xml_writer->characters($the_post->{acceptComment});
+	$xml_writer->endTag("acceptComment");
+	
+	# acceptTrackback : 트랙백을 적을 수 있는지인지... 여튼 비슷한 것인 듯싶다.
+	$xml_writer->startTag("acceptTrackback");
+	$xml_writer->characters($the_post->{acceptTrackback});
+	$xml_writer->endTag("acceptTrackback");
+	
+	# published : 글을 발행한 날짜.
+	# 이글루스의 경우 이 차이를 두지 않기에 created와 modified도 동일하게 한다.
+	$xml_writer->startTag("published");
+	$xml_writer->characters($the_post->{time});
+	$xml_writer->endTag("published");
+	
+	$xml_writer->startTag("created");
+	$xml_writer->characters($the_post->{time});
+	$xml_writer->endTag("created");
+	
+	$xml_writer->startTag("modified");
+	$xml_writer->characters($the_post->{time});
+	$xml_writer->endTag("modified");
+	
+	# category : 카테고리
+	$xml_writer->startTag("category");
+	$xml_writer->characters($the_post->{category});
+	$xml_writer->endTag("category");
+	
+	# tag : 태그 - 있는 만큼 태그로 만든다.
+	# <ul class="tag"><li><a href="/m/tag/%ED%83%9C%EA%B7%B8">태그</a></li><li><a href="/m/tag/%ED%83%9C%EA%B7%B81">태그1</a></li><li class="last"><a href="/m/tag/%ED%83%9C%EA%B7%B82">태그2</a></li></ul>
+	my @tags; # 태그.
+	# 본문 부분 가져오기
+	my $page = $the_post->{content_html};
+	my $tag_html = findstr($page, '<ul class="tag">', '<\/ul>');
+	if($page =~ m/<ul class="tag">(.+?)<\/div>/g)
+	{
+		my $tag_html = $1;
+		# 예제 : 주민등록번호,&nbsp;도용,&nbsp;탈퇴,&nbsp;웹사이트,&nbsp;사이트
+		$tag_html =~ s/<li><a href="[^"]+">(.*?)<\/a><\/li>/$1<>/ig;
+		@tags = split /<>/, $tag_html;
+		
+		# tags 변수 안에 있는 것을 xml에 하나씩 쓰기.
+		foreach (@tags)
+		{
+			$xml_writer->startTag("tag");
+			$xml_writer->characters($_);
+			$xml_writer->endTag("tag");
+		}
+	}
+	
+#	본문 안의 자신의 블로그 주소를 새로운 것으로 바꿈.
+	#if(!('' eq $egloosinfo->{newblogurl}))
+	#{
+	#	if($the_post->{description} =~ m/$egloosinfo->{blogurl}\/(\d{6,7})/ig)
+	#	{
+	#		my $new_postid = scalar(keys(%$postid_index)) - $postid_index->{$1};
+	#		$the_post->{description} =~ s/$egloosinfo->{blogurl}\/(\d{6,7})/$egloosinfo->{newblogurl}\/$new_postid/ig;
+	#	}
+	#}
+	
+	# content : 글 내용
+	$xml_writer->startTag("content");
+	$xml_writer->cdata($the_post->{description});
+	$xml_writer->endTag("content");
+	
+	# attachment : 파일.
+	# 워낙 양이 많아서 서브루틴을 새롭게 만듬.
+	attachment_file($the_post, $xml_writer);
+	
+	
+	# ----------------------------------------------------------------------------- #
+	#	트랙백 태그 처리를 시작합니다.
+	# ----------------------------------------------------------------------------- #
+	# 	트랙백을 xml에 쓰기
+	#	start_trackbacks가 -1이라는 얘기는 하나도 없다는 뜻이다.
+	#	물론 이 코드를 만든 이후에 trackback_count로 트랙백 개수를 확인하였기에 그것을 사용해도 상관없음.
+	#	하지만 그 코드는 삭제 가능성이 있기에 삭제 가능성이 없는 이 코드를 그대로 사용하기로 함.
+	if(-1 != $the_post->{start_trackbacks})
+	{
+		m_write_trackbacks($the_post, $all_trackback, $xml_writer);
+	}
+	
+	
+	# ----------------------------------------------------------------------------- #
+	#	댓글 태그 처리를 시작합니다.
+	# ----------------------------------------------------------------------------- #
+	#	댓글을 xml에 쓰기
+	#	위에 트랙백과 비슷한 얘기.
+	#	댓글의 개수를 Postclass안에서 구해서 저장하였기에 이렇게 하지 않아도 되지만, 삭제 가능성이 있어 그대로 둠.
+	if(-1 != $the_post->{start_comments})
+	{
+		m_write_comments($the_post, $all_comment, $xml_writer);
+	}
+	
+	
+	# Post 태그 닫기
+	$xml_writer->endTag("post");
+}
+
+
+# 트랙백 xml에 쓰는 함수.
+sub m_write_trackbacks ($\@$)
+{
+#	html 형식, trackback 개수, xml writer
+	my ($the_post, $all_trackback, $xml_writer) = @_;
+	
+	#		트랙백과 댓글 파일도 다운로드 받는다.
+	my $idx;
+	my $content_html_temp;
+	my $trackback_count_div_10 = ceil($the_post->{trackback_count} / 10);
+	my $filename_temp;
+	for($idx = 1 ; $idx <= $trackback_count_div_10 ; $idx++)
+	{
+		# 트랙백 받기
+		$filename_temp = 'data/mobile/' . $postid . '/trackback_list_' . $idx . '.xml';
+		# 파일이 존재하지 않는다면 쓰기
+		if(-e $filename_temp)
+		{
+			open(READ_HANDLE,"+< " . $filename_temp ) or die $!;
+			$content_html_temp = <READ_HANDLE>;
+			close(READ_HANDLE);
+		}
+		else
+		{
+			$content_html_temp = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/trackback/' . $postid . '/page/' . $idx, 0);
+			open(OUT, ">:encoding(utf8) " ,$filename_temp) or die $!;
+			print OUT $content_html_temp;
+			close(OUT);
+		}
+		
+#		트랙백 별 쪼개기.
+		my @trackback_fields = split /<div class="trackback_list">/, $content_html_temp;
+		shift @trackback_fields; # 처음 것 제거.
+		
+#		트랙백 하나씩 처리하기.
+		for my @trackback_field (@trackback_fields)
+		{
+			my $target_url = findstr(@trackback_field, '<em><a href="', '"');
+			
+			# xml에 태그 쓰기.
+			# 이 함수를 만들 때 정신이 없어서 각 태그가 무엇을 뜻하는지 주석을 달지 않았음.
+			# 하지만 TrackbackClass.pm에 모두 적었기에 그 파일의 주석 참고.
+			$xml_writer->startTag("trackback");
+			
+			$xml_writer->startTag("url");
+			$xml_writer->cdata($target_url);
+			$xml_writer->endTag("url");
+			
+			$xml_writer->startTag("site");
+			$xml_writer->cdata($target_url);	# mobile에서는 알 수 없음.
+			$xml_writer->endTag("site");
+			
+			$xml_writer->startTag("title");
+			$xml_writer->cdata($trackback_class->{title});
+			$xml_writer->endTag("title");
+			
+			$xml_writer->startTag("excerpt");
+			$xml_writer->cdata($trackback_class->{excerpt});
+			$xml_writer->endTag("excerpt");
+			
+			$xml_writer->startTag("received");
+			$xml_writer->cdata($trackback_class->{received});
+			$xml_writer->endTag("received");
+	
+			# ip의 경우 모르기에 emptytag로 처리한다.
+			$xml_writer->emptyTag("ip");
+			
+			$xml_writer->endTag("trackback");
+		}
+	}
+	
+	
+#	start_trackbacks와 end_trackback는 $all_trackback안에 해당 포스트에 연결되어 있는 트랙백의 시작 index와 끝 index를 말함.
+#	따라서 trackback_point에서는 그 처음 index를 초기화하여 처리한 후 하나씩 증가하여 end_point까지 도착하도록 함.
+	my $trackback_point = $the_post->{start_trackbacks};
+	my $end_point = $the_post->{end_trackbacks};
+	my $trackback_class; # TrackbackClass 임시 변수
+	
+#	루프.
+#	start_trackbacks부터 end_trackbacks까지 달린다.
+	for ( ; $trackback_point <= $end_point ; $trackback_point++)
+	{
+		$trackback_class = $all_trackback->[$trackback_point];
+		
+#		xml에 태그 쓰기.
+#		이 함수를 만들 때 정신이 없어서 각 태그가 무엇을 뜻하는지 주석을 달지 않았음.
+#		하지만 TrackbackClass.pm에 모두 적었기에 그 파일의 주석 참고.
+		$xml_writer->startTag("trackback");
+		
+		$xml_writer->startTag("url");
+		$xml_writer->cdata($trackback_class->{url});
+		$xml_writer->endTag("url");
+		
+		$xml_writer->startTag("site");
+		$xml_writer->cdata($trackback_class->{site});
+		$xml_writer->endTag("site");
+		
+		$xml_writer->startTag("title");
+		$xml_writer->cdata($trackback_class->{title});
+		$xml_writer->endTag("title");
+		
+		$xml_writer->startTag("excerpt");
+		$xml_writer->cdata($trackback_class->{excerpt});
+		$xml_writer->endTag("excerpt");
+		
+		$xml_writer->startTag("received");
+		$xml_writer->cdata($trackback_class->{received});
+		$xml_writer->endTag("received");
+
+#		ip의 경우 모르기에 emptytag로 처리한다.
+		$xml_writer->emptyTag("ip");
+		
+		$xml_writer->endTag("trackback");
+	}
+}
+
+
+# comment를 xml에 적는다.
+# 방식은 위의 write_trackbacks 함수와 비슷하나 답댓글이 존재하기에 태그를 닫을 때 신경써야 한다.
+sub m_write_comments ($\@$)
+{
+#	html 형식, comment 개수, xml writer
+	my ($the_post, $all_comment, $xml_writer) = @_;
+	my $comment_class; # CommentClass 임시 변수.
+#	방식은 위에 write_trackbacks와 동일하다.
+	my $comment_point = $the_post->{start_comments};
+	my $end_point = $the_post->{end_comments};
+	
+#	루프.
+#	각 배열별로 살펴본 후 xml에 쓰기
+	for ( ; $comment_point <= $end_point ; $comment_point++)
+	{
+		$comment_class = $all_comment->[$comment_point];
+		
+#		xml에 comment를 작성한다.
+		$xml_writer->startTag("comment");
+		
+#		commenter 태그 작성.
+		$xml_writer->startTag("commenter");
+		
+		$xml_writer->startTag("name");
+		$xml_writer->characters($comment_class->{who});
+		$xml_writer->endTag("name");
+		
+		$xml_writer->startTag("homepage");
+		$xml_writer->characters($comment_class->{href});
+		$xml_writer->endTag("homepage");
+		
+		$xml_writer->emptyTag("ip");
+		
+		$xml_writer->endTag("commenter");
+		
+#		나머지 태그 작성
+		$xml_writer->startTag("content");
+		$xml_writer->cdata($comment_class->{description});
+		$xml_writer->endTag("content");
+		
+		$xml_writer->emptyTag("password");
+		
+		$xml_writer->startTag("secret");
+		$xml_writer->cdata($comment_class->{is_secret});
+		$xml_writer->endTag("secret");
+		
+		$xml_writer->startTag("written");
+		$xml_writer->cdata($comment_class->{time});
+		$xml_writer->endTag("written");
+		
+		
+#		답댓글이면 자신의 것(답댓글) 태그 닫기.
+		if(0 == $comment_class->{is_root})
+		{
+			$xml_writer->endTag("comment");
+		}
+		
+#		마지막이거나 다음 것이 root comment라면 root comment 태그 닫기
+#		Perl은 어떠할지 모르나 lazy evaluation이 적용되는 것이라면,
+#		앞의 문이 true라면 뒤의 것은 실행하지 않을 것이다.
+#		따라서 설령 뒤의 것이 boundary를 넘어서 살펴보는 버그를 일으키는 코드가 될 수 있을지라도
+#		그 때는 이미 앞의 것이 true가 되어 실행되지 않을 것이기에 문제가 없을 것이다.
+#		하지만 이는 안되는 듯싶어 ||이 아니라 elsif로 처리.
+		if($comment_point == $end_point)
+		{
+			$xml_writer->endTag("comment");
+		}
+		elsif(1 == $all_comment->[$comment_point+1]->{is_root})
+		{
+			$xml_writer->endTag("comment");
+		}
+	}	# for 문 종료.
+}
+
+
+

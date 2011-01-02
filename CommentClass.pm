@@ -113,15 +113,12 @@ sub new ($$$$\%\@)
 	my $temp_time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
 #	24시간 안에 올라온 것인지 확인.
-	if(DateTime->compare($temp_time, $dt_today) < 0)
-	{
+	#if(DateTime->compare($temp_time, $dt_today) < 0)
+	#{
 #		24시간 안에 올라온 것이기에 새롭게 받는다.
-		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid, 0);
-#		<!-- egloos content start -->(.*?)<!-- egloos content end -->
-		$content_html =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig;
-		$content = $1;
-	}
-	else
+		#my $comments_src = $egloosinfo->{blogurl} . '/egloo_feedback.php?eid=' . $egloosinfo->{eid} . '&ismain=&type=post_comment&xhtml=1&srl=' . $postid . '&page=';
+	#}
+	#else
 	{
 #		24시간 안에 올라온 것이 아니기에 미리 저장한 곳에서 가져온다.
 #		이글루스가 임시 조치한 글의 경우 목록에 글이 없다.
@@ -212,7 +209,7 @@ sub new ($$$$\%\@)
 		if(1 == $is_root)
 		{
 			# 댓글.
-			if($content =~ m/(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span> <span class="comment_link"><\/span> <span class="comment_admin">$needle1[^>]+>(?:.*?)<\/h4>(.*?)<div id="/i)
+			if($content =~ m/(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><span class="comment_link"><\/span><span class="comment_admin">$needle1[^>]+>(?:.*?)<\/h4>(.*?)<div id="/i)
 			{
 				$time = DateTime->new(year => $1, month  => $2, day => $3,
 								hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
@@ -242,7 +239,7 @@ sub new ($$$$\%\@)
 		else
 		{
 			# 답댓글
-			if($content =~ m/(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span> <span class="comment_link"><\/span> <span class="comment_admin">$needle1[^>]+>(?:.*?)<\/h4>(.*?)<\/li>/i)
+			if($content =~ m/(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><span class="comment_link"><\/span><span class="comment_admin">$needle1[^>]+>(?:.*?)<\/h4>(.*?)<\/li>/i)
 			{
 				$time = DateTime->new(year => $1, month  => $2, day => $3,
 								hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');

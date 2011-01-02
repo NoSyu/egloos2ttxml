@@ -20,7 +20,7 @@ BEGIN {
 }
 
 #메시지 출력
-my_print("\t\t\tEgloos2TTXML ver 0.0.8.4\n");
+my_print("\t\t\tEgloos2TTXML ver 0.0.9.0\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
 my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
@@ -128,6 +128,8 @@ while(1)
 	{
 		# 다운로드
 		# 1번은 이글루스 백업에 주력한다.
+		my_print("리스트 가져오는 중...\n");
+		get_all_list($egloosinfo);
 		my_print("글 가져오는 중...\n");
 		@all_post = get_all_post($egloosinfo, %postid_index);
 		my_print("글 다 가져왔습니다...\n\n");
@@ -165,6 +167,8 @@ while(1)
 		
 		
 		# 2번을 하기 위해 불러온다.
+		my_print("리스트 가져오는 중...\n");
+		get_all_list($egloosinfo);
 		my_print("글 가져오는 중...\n");
 		@all_post = get_all_post($egloosinfo, %postid_index);
 		my_print("글 다 가져왔습니다...\n\n");
@@ -215,10 +219,28 @@ while(1)
 		# 사용자의 입력을 받기 위해 만든 무한루프 빠져나가기.
 		last;
 	}
+#	elsif('4' eq $number)
+#	{
+#		# 모바일 페이지로 작업한다.
+#		my_print("XMLRPC 문제와 스킨의 다양성에 따라 작동하지 않는 경우가 있습니다.\n");
+#		my_print("따라서 어느 이글루든 표준적으로 나오는 모바일 페이지를 이용하였습니다.\n");
+#		my_print("모바일로 보는 것을 가져오는 것이기에 문제가 조금 있을 수 있지만,\n");
+#		my_print("궁여지책 중 하나라는 점을 말씀드립니다.\n");
+#		my_print("작업 폴더는 mobile 입니다.\n");
+#		my_print("다시 시작하고 싶으시다면 이를 지우시길 바랍니다.\n");
+#		
+#		# 글을 하나씩 가져와서 폴더에 저장시킨다.
+#		
+#		
+#		# 글을 하나씩 이어서 쓰는 방식으로 하여 XML 파일을 만든다.
+#		
+#		# 사용자의 입력을 받기 위해 만든 무한루프 빠져나가기.
+#		last;
+#	}
 	else
 	{
 		# 1번과 2번이 아닌 다른 입력이 들어왔기에 얘기한다.
-		my_print("1 혹은 2를 입력해주세요.\n\n");
+		my_print("1, 2, 3, 4 중 하나를 입력해주세요.\n\n");
 	}
 }
 
@@ -226,6 +248,7 @@ while(1)
 # 하지만 프로그램을 윈도우에서 바로 시작한 사람은 이 메시지를 못 본다.
 # 물론 이 밑에 STDIN으로 볼 수 있게 할 수 있으나 굳이 해야하는가 의문이다.
 my_print("끝났습니다~^^\n\n");
+my_print("프로그램 만든이 : NoSyu(http://nosyu.pe.kr)\n\n");
 
 # 마지막 장면(?)을 볼 수 있게 <STDIN>을 붙인다.
 my_print("엔터 혹은 Ctrl+C를 누르면 프로그램이 끝납니다.\n");

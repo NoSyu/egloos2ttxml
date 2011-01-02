@@ -44,15 +44,15 @@ sub new ($$$$$\%\@)
 	my $temp_time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
 #	24시간 안에 올라온 것인지 확인.
-	if(DateTime->compare($temp_time, $dt_today) < 0)
-	{
-#		24시간 안에 올라온 것이기에 새롭게 받는다.
-		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid, 0);
-#		<!-- egloos content start -->(.*?)<!-- egloos content end -->
-		$content_html =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig;
-		$content = $1;
-	}
-	else
+#	if(DateTime->compare($temp_time, $dt_today) < 0)
+#	{
+##		24시간 안에 올라온 것이기에 새롭게 받는다.
+#		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid, 0);
+##		<!-- egloos content start -->(.*?)<!-- egloos content end -->
+#		$content_html =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig;
+#		$content = $1;
+#	}
+#	else
 	{
 #		그렇지 않기에 미리 저장한 곳에서 가져온다.
 #		이글루스가 임시 조치한 글의 경우 목록에 글이 없다.
@@ -112,7 +112,7 @@ sub new ($$$$$\%\@)
 	{
 		# 스킨 2.0인지 확인한다.
 		# <li><h4><a href="http://dongdm.egloos.com/2500625" target="_blank">Yes! No!</a> <span class="trackback_datetime">2010/01/16 13:46</span> <span class="trackback_link"><a href="http://dongdm.egloos.com/2500689#572785" title="#">#</a></span> </h4> <p class="trackback_desc" id="572785" name="572785"> google_ad_client = &quot;pub-7048624575756403&quot;;google_ad_slot = &quot;1900030367&quot;;google_ad_width = 300;google_ad_height = 250;Thereare some difference between Korean and English grammar. The order ofsentence element is different. For example, translating dire...... <a href="http://dongdm.egloos.com/2500625" class="more" target="_blank">more</a></p>		
-		if($content =~ m/<span class="trackback_datetime">(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span> <span [^>]+>$start_needle/i)
+		if($content =~ m/<span class="trackback_datetime">(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><span [^>]+>$start_needle/i)
 		{
 			$time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
