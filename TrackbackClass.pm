@@ -33,115 +33,89 @@ sub new ($$$$$\%\@)
 	$trackback_field =~ m/$start_needle(.+?)"[^>]+>(.+?)<\/a>/i;
 	$href = $1;
 	$blog_title = $2;
-
-#	트랙백이 적혀진 글의 페이지 가져오기. - 수정 2009.01.11
-#	트랙백이 프로그램이 시작하는 오늘 적혔다면 다시 읽어오기. - 2009-1-13
-#	my $content = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid);
-#	예제.
-#	<td width="80" align="center" class="black">2009/01/06</td></tr>
-	my $content; # 해당 페이지
-	$trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;
-	my $temp_time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
-#	24시간 안에 올라온 것인지 확인.
-#	if(DateTime->compare($temp_time, $dt_today) < 0)
-#	{
-##		24시간 안에 올라온 것이기에 새롭게 받는다.
-#		my $content_html = BackUpEgloos_Subs::getpage($blogurl . '/' . $postid, 0);
-##		<!-- egloos content start -->(.*?)<!-- egloos content end -->
-#		$content_html =~ m/<!-- egloos content start -->(.*?)<!-- egloos content end -->/ig;
-#		$content = $1;
-#	}
-#	else
-	{
-#		그렇지 않기에 미리 저장한 곳에서 가져온다.
-#		이글루스가 임시 조치한 글의 경우 목록에 글이 없다.
-#		따라서 여기서 만들어 처리한다. - 2009-1-13, http://nosyu.pe.kr/1796
-#		http://www.cs.mcgill.ca/~abatko/computers/programming/perl/howto/hash/
-		if(exists $postid_index->{$postid})
-		{
-			$content = $all_post->[$postid_index->{$postid}]->{content_html};
-		}
-		else
-		{
-#			Post를 만든다.
-#			이글루스가 닫았으니 글은 비공개, 댓글, 트랙백도 전부 닫기.
-			my %open_close;
-			$open_close{post} = 'private';
-			$open_close{comment} = 0;
-			$open_close{trackback} = 0;
-			
-			my $filename = 'data/' . $postid . '/content.xml';
-			
-#			post 변수 생성.
-			my $the_post = PostClass->new($postid, $egloosinfo, 0, 0, %open_close);
-			
-#			xml 파일 쓰기.
-			BackUpEgloos_Subs::write_post_xml($filename, $the_post);
-			
-#   		배열에 글 정보 저장.
-			push @$all_post, $the_post;
-			
-#			배열 index 저장.
-			$postid_index->{$postid} = scalar(@$all_post) - 1;
-			
-			BackUpEgloos_Subs::my_print("이글루스가 임시 조치한 글을 추가하였습니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . " - 제목 : " . $the_post->{title} . "\n");
-			open(OUT, ">>:encoding(utf8) " , 'Egloos_blind.txt') or die $!;
-			print OUT $postid . ' : ' .$the_post->{title} . "\n\n";
-			close(OUT);
-		}
-	}
-	
-	
-#	예제.
-#	<a href="http://NoSyu.egloos.com/4631722#409427"
-	$start_needle = '<a href="' . $blogurl . '/' . $postid . '#' . $trackbackid . '" title="#">';
-	$content =~ m/$start_needle(.*?)<div class="comment_body"/i;
-	my $trackback_html = $1;
-	
-#	예제.
-#	Tracked from  <a href="http://www.sis.pe.kr/2252" target="_new"><strong>엔시스의  정보보호 따..</strong></a> at 2008/10/01 08:45 <a href="
-#	2009-1-12 추가.
-	if($trackback_html =~ m/Tracked from  <a href="(.*?)"[^>]+><strong>(.*?)<\/strong><\/a> at (\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i)
-	{
-		$time = DateTime->new(year => $3, month  => $4, day => $5,
-						hour => $6, minute => $7, second => 0, time_zone => 'Asia/Seoul');
-		$time = $time->epoch();
-	}
-	else
-	{
-		# 스킨 2.0인지 확인한다.
-		# <li><h4><a href="http://dongdm.egloos.com/2500625" target="_blank">Yes! No!</a> <span class="trackback_datetime">2010/01/16 13:46</span> <span class="trackback_link"><a href="http://dongdm.egloos.com/2500689#572785" title="#">#</a></span> </h4> <p class="trackback_desc" id="572785" name="572785"> google_ad_client = &quot;pub-7048624575756403&quot;;google_ad_slot = &quot;1900030367&quot;;google_ad_width = 300;google_ad_height = 250;Thereare some difference between Korean and English grammar. The order ofsentence element is different. For example, translating dire...... <a href="http://dongdm.egloos.com/2500625" class="more" target="_blank">more</a></p>		
-		if($content =~ m/<span class="trackback_datetime">(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><span [^>]+>$start_needle/i)
-		{
-			$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
-			$time = $time->epoch();
-		}
-		elsif($trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i)
-		{
-	#		스킨이 다르기에 안 되는 것임. 날짜는 잡으나 시간을 00:00으로 잡는다.
-			$time = DateTime->new(year => $1, month  => $2, day => $3,
-							hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
-			$time = $time->epoch();
-		}
-		else
-		{
-	#		에러가 날 일이 거의 없지만 혹시나 하는 생각에 리포트 용으로 만듬.
-	#		최근에는 잘 나타나지 않으나 그래도 남겨둠.
-			BackUpEgloos_Subs::my_print("에러! : " . $postid ."의 트랙백 " . $trackbackid . "\n");
-			BackUpEgloos_Subs::my_print('error.txt를 nosyu@nosyu.pe.kr으로 보내주시길 바랍니다.' . "\n");
-			BackUpEgloos_Subs::print_txt("TrackbackClass__time\n\n" . $blogurl . '/' . $postid . '#' . $trackbackid . "\n\n" . $trackback_html . "\n\n" . $content . "\n\n" . $trackback_field); # 디버그용.
-			die;
-
-		}
-	}
 	
 #	예제.
 #	<td width="435" class="black"><a href="http://NoSyu.egloos.com/4631722"  title="??개인정보에 대한 이야기는 어제 오늘의 이야기가 아니죠..지금 한국정보보호진흥원(이하 'KISA)에서 개인정보 클린 캠페인을 9.24~10.24일까지 한달간 하고 있습니다. 본 블로거도 정보보호에 관심 있는 만큼 참여 해 보기로 하였습니다. 혹시, 어렵다고 하시는 분들을 위하여 하나씩 소개해 드리겠습니다. ?1. 개인정보 클린 캠페인 홈페이지를 방문한다. http://p-clean.kisa.or.kr/ 홈페이지를 방문하면 아래와 같은 홍보와 ..." target="_new">개인정보 클린 캠페인 참여해 보니 - 대부분 게임싸이트더라</a></td>
 	$trackback_field =~ m/<td width="435" class="black"><a href="[^"]+"  title="(.*?)" target="_new">(.*?)<\/a><\/td>/i;
 	$description = $1;
 	$post_title = $2;
+	
+#	트랙백이 적혀진 글의 페이지 가져오기. - 수정 2009.01.11
+#	트랙백이 프로그램이 시작하는 오늘 적혔다면 다시 읽어오기. - 2009-1-13
+	my $content; # 해당 페이지
+	
+#	이글루스가 임시 조치한 글의 경우 목록에 글이 없다.
+#	따라서 여기서 만들어 처리한다. - 2009-1-13, http://nosyu.pe.kr/1796
+#	http://www.cs.mcgill.ca/~abatko/computers/programming/perl/howto/hash/
+	if(exists $postid_index->{$postid})
+	{
+		$content = $all_post->[$postid_index->{$postid}]->{content_html};
+	}
+	else
+	{
+#		Post를 만든다.
+#		이글루스가 닫았으니 글은 비공개, 댓글, 트랙백도 전부 닫기.
+		my %open_close;
+		$open_close{post} = 'private';
+		$open_close{comment} = 0;
+		$open_close{trackback} = 0;
+		
+		my $filename = 'data/' . $postid . '/content.xml';
+		
+#		post 변수 생성.
+		my $the_post = PostClass->new($postid, $egloosinfo, 0, 0, %open_close);
+		
+#		xml 파일 쓰기.
+		BackUpEgloos_Subs::write_post_xml($filename, $the_post);
+		
+#   	배열에 글 정보 저장.
+		push @$all_post, $the_post;
+		
+#		배열 index 저장.
+		$postid_index->{$postid} = scalar(@$all_post) - 1;
+		
+		BackUpEgloos_Subs::my_print("이글루스가 임시 조치한 글을 추가하였습니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . " - 제목 : " . $the_post->{title} . "\n");
+		open(OUT, ">>:encoding(utf8) " , 'Egloos_blind.txt') or die $!;
+		print OUT $postid . ' : ' .$the_post->{title} . "\n\n";
+		close(OUT);
+	}	
+
+#	time이 해결되지 않았음. 그래서 본문에서 가져와야 함.
+#	<div class="trackback_list">
+#                    <em><a href="http://dongdm.egloos.com/m/2500625" target="_blank" class="trackback_title">Yes! No!</a></em><br />
+#                    <span>2010/01/16 13:46</span>
+#                    <p>
+#                        google_ad_client = "pub-7048624575756403";google_ad_slot = "1900030367";google_ad_width = 300;google_ad_height = 250;Thereare some difference between Korean and English grammar. The order ofsentence element is different. For example, translating dire... 
+#                        <a href="#" class="btn_delete" title="삭제" onclick="delTrackback('572785', '2500689', 'a0030011');" >삭제</a>
+#                    </p>
+#
+#                </div>
+
+	my $temp_href = $href;
+	if($temp_href =~ m/http:\/\/(.*?)\.egloos\.com(.*?)$/i)
+	{
+		$temp_href = 'http://' . $1 . '.egloos.com/m' . $2;
+	}
+
+	$start_needle = '<em><a href="' . $temp_href . '" target="_blank" class="trackback_title">(?:.*?)</a></em><br /><span>';
+	my $end_needle = "'" . $trackbackid . "'";
+	if($content =~ m/$start_needle(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span>(?:.*)delTrackback\($end_needle/i)
+	{
+		# 찾았기에 입력한다.
+		$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
+	}
+	else
+	{
+		# 못 찾았기에 관리 페이지에 있는 것을 한다. 이것은 0시 0분 0초가 된다.
+		$trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;
+		$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+		
+		BackUpEgloos_Subs::print_txt("트랙백 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $trackbackid . "\n");
+	}
+	$time = $time->epoch();
+	
 	
 # 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
 	#	&quot; -> "

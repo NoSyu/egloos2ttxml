@@ -135,7 +135,7 @@ sub new ($$$\%%)
 			$get_data_html = BackUpEgloos_Subs::getpage($comments_src . $cmt_page, 0);
 			
 			# 댓글 부분만 뽑아내기
-			$get_data_html = BackUPEgloos_Subs::findstr($get_data_html, '<!-- comment -->', '<!-- reply_write -->');
+			$get_data_html = BackUpEgloos_Subs::findstr($get_data_html, '<!-- comment -->', '<!-- reply_write -->');
 			
 			# 붙이기.
 			# 기존의 것과 연결해서 붙여넣기.
@@ -157,7 +157,7 @@ sub new ($$$\%%)
 			$get_data_html = BackUpEgloos_Subs::getpage($trackback_src . $cmt_page, 0);
 			
 			# 트랙백 부분만 뽑아내기
-			$get_data_html = BackUPEgloos_Subs::findstr($get_data_html, '<!-- comment -->', '<ul class="pagination_view">');
+			$get_data_html = BackUpEgloos_Subs::findstr($get_data_html, '<!-- comment -->', '<ul class="pagination_view">');
 			
 			# 붙이기.
 			# 기존의 것과 연결해서 붙여넣기.
