@@ -130,8 +130,10 @@ sub new ($$$$\%\@)
 #		따라서 새롭게 Post를 만든다.
 #		이글루스가 닫았으니 글은 비공개, 댓글, 트랙백도 전부 닫기.
 
+#		새로운 것 추가.
+#		메뉴릿이라고 하는 것이 생겼는데 여기서 이런 일이 발생하고 있다.
 		my %open_close;
-		$open_close{post} = 'private';
+		$open_close{post} = 'private';	# 일단 이글루스가 비공개 처리한 글이라고 가정한다.
 		$open_close{comment} = 0;
 		$open_close{trackback} = 0;
 		

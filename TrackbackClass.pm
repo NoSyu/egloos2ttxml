@@ -98,8 +98,9 @@ sub new ($$$$$\%\@)
 	}
 
 	$start_needle = '<em><a href="' . $temp_href . '" target="_blank" class="trackback_title">(?:.*?)</a></em><br /><span>';
-	my $end_needle = "'" . $trackbackid . "'";
-	if($content =~ m/$start_needle(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span>(?:.*)delTrackback\($end_needle/i)
+	my $end_needle = "'" . $trackbackid . "', '" . $postid . "'";
+	#if($content =~ m/$start_needle(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span>(?:.*)delTrackback\($end_needle/i)
+	if($content =~ m/<span>(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span>((?:(?!onclick="delTrackback\('(?!$trackbackid)[0-9]+?', '$postid').)*?)onclick="delTrackback\($end_needle/i)
 	{
 		# 찾았기에 입력한다.
 		$time = DateTime->new(year => $1, month  => $2, day => $3,

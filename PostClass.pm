@@ -39,7 +39,9 @@ my $content_html; # content html 저장. - 2009-1-11 추가.
 # 기존에는 댓글과 트랙백 하나마다 글이 적혀진 페이지에 접근하였으나 이글루스에서 접속을 끊어버려 그리고 네트워크 사용으로 프로그램 속도가 느려짐.
 # 따라서 글에 대한 정보를 저장할 때 가공하지 않은 html 코드를 저장하기로 함.
 # 대신 페이지 전부가 아닌 글, 트랙백, 댓글이 있는 부분만 저장한다.
-
+my $is_menu_page = 0;		# 이글루스에 새로 추가된 것으로 메뉴릿이라고 하는 것이 있다. 이것의 경우 댓글 아이디 체계가 기존의 것과 반대로 되어 있다.
+# 따라서 이것을 보고 TTXML 작성할 때 댓글을 쓸 방향을 정해야 한다. 
+# 0이면 일반 글, 1이면 메뉴릿
 
 #생성자
 sub new ($$$\%%)
@@ -229,7 +231,7 @@ sub new ($$$\%%)
 		start_trackbacks=>$start_trackbacks, end_trackbacks=>$end_trackbacks,
 		start_comments=>$start_comments, end_comments=>$end_comments,
 		trackback_count=>$trackback_count, comment_count=>$comment_count,
-		content_html=>$content_html};
+		content_html=>$content_html, is_menu_page=>$is_menu_page};
 	}
 #	파일이 존재하니 불러오기.
 #	즉, 이미 다운로드를 받았기에 새롭게 다운로드를 받을 필요가 없다는 뜻임.
