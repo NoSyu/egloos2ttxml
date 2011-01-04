@@ -241,6 +241,7 @@ sub new ($$$\%%)
 #		이미지 다운로드 받기.
 #		이미지 다운로드 및 파일 다운로드 그리고 이름 변경까지 수행한다.
 		$description = changeimgsrc_m($description, $postid);
+		$description = changeimgsrc($description, $postid);
 		
 #		변수 등록.
 		$self = { postid=>$postid, description=>$description, time=>$time,
@@ -275,12 +276,12 @@ sub changeimgsrc($$)
 	my ($description, $postid) = @_;
 	# 다운로드 받아 저장할 src : 'pic/postid_XXX.jpg(png 등)'
 
-	my $i = 1; # 다운로드 받은 것들의 이름. 1부터 시작
+	my $i = $file_count + 1; # 다운로드 받은 것들의 이름. _m 뒤를 이어서 진행되기에...
 	my $ori_post_html = $description; # 원본 페이지.
 	
 	
 	# 본문 안의 이미지 다운로드
-	while($description =~ m/<img ((?:.*?) src="(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))"[^>]*)>/igc)
+	while($description =~ m/<img((?:.*?)src="(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))"[^>]*)>/igc)
 	{
 #		예제.
 #		http://pds12.egloos.com/pds/200812/29/60/c0049460_495826383bef7.png
@@ -341,7 +342,7 @@ sub changeimgsrc($$)
 							'" height="' . $height .
 							'" alt="' . $alt . '"';
 			$img_dest = '[##_1C|' . $istr . '.' . $img_extension . '|' . $img_info . '| _##]'; # TTXML에 맞게 이름 설정.
-			$ori_post_html =~ s/<img (?:.*?) src="$img_url"[^>]*>/$img_dest/ig; # 이름 바꾸기.
+			$ori_post_html =~ s/<img(?:.*?)src="$img_url"[^>]*>/$img_dest/ig; # 이름 바꾸기.
 			$i++; # 파일명을 하나 증가.
 		}
 	} # end of  foreach my $img_elem (@img_elems)

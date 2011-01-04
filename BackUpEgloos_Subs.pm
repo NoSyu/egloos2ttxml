@@ -160,6 +160,12 @@ sub downImage ($$$)
 		$EgloosInfo::mech->get($img_src);
 		if(200 == $EgloosInfo::mech->status())
 		{
+			#if()
+			#{
+				
+			#}
+			my $ctr = $EgloosInfo::mech->content_type();
+			#print_txt($ctr);
 #			status가 200이기에 정상이니까 저장한다.
 			$EgloosInfo::mech->save_content($img_dest);
 			return 0;

@@ -136,6 +136,7 @@ sub new ($$$$\%\@)
 		$open_close{post} = 'public';	# 메뉴릿이 더 많은 것이라 가정하자.
 		$open_close{comment} = 0;
 		$open_close{trackback} = 0;
+		$open_close{datetime_info} = '';
 		
 		my $filename = 'data/' . $postid . '/content.xml';
 		
