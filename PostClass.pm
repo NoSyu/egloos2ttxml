@@ -240,7 +240,7 @@ sub new ($$$\%%)
 		
 #		이미지 다운로드 받기.
 #		이미지 다운로드 및 파일 다운로드 그리고 이름 변경까지 수행한다.
-		$description = changeimgsrc($description, $postid);
+		$description = changeimgsrc_m($description, $postid);
 		
 #		변수 등록.
 		$self = { postid=>$postid, description=>$description, time=>$time,
@@ -391,6 +391,9 @@ sub changeimgsrc_m($$)
 	my $ori_post_html = $description; # 원본 페이지.
 	
 	# 본문 안의 이미지 다운로드
+	# http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
+	# http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
+	# <img border="0" src="http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg" width="300" alt="500" onclick="egloo_img_resize(this, 'http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg');" />
 	while($description =~ m/<img ((?:.*?) onclick="egloo_img_resize\(this, '(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))'[^>]*)>/igc)
 	{
 #		예제.
