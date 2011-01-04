@@ -472,70 +472,146 @@ sub write_comments ($\@$)
 	my ($the_post, $all_comment, $xml_writer) = @_;
 	my $comment_class; # CommentClass 임시 변수.
 #	방식은 위에 write_trackbacks와 동일하다.
-	my $comment_point = $the_post->{start_comments};
-	my $end_point = $the_post->{end_comments};
-	
-#	루프.
-#	각 배열별로 살펴본 후 xml에 쓰기
-	for ( ; $comment_point <= $end_point ; $comment_point++)
+#	대신 메뉴릿 때문에 읽는 순서를 바꿔야 할 필요가 있다.
+#	최적화를 우선으로 하여 먼저 if문으로 확인 후 for문을 달린다.
+
+	if(0 == $the_post->{is_menu_page})
 	{
-		$comment_class = $all_comment->[$comment_point];
+		# 보통글
+		my $comment_point = $the_post->{start_comments};
+		my $end_point = $the_post->{end_comments};
 		
-#		xml에 comment를 작성한다.
-		$xml_writer->startTag("comment");
-		
-#		commenter 태그 작성.
-		$xml_writer->startTag("commenter");
-		
-		$xml_writer->startTag("name");
-		$xml_writer->characters($comment_class->{who});
-		$xml_writer->endTag("name");
-		
-		$xml_writer->startTag("homepage");
-		$xml_writer->characters($comment_class->{href});
-		$xml_writer->endTag("homepage");
-		
-		$xml_writer->emptyTag("ip");
-		
-		$xml_writer->endTag("commenter");
-		
-#		나머지 태그 작성
-		$xml_writer->startTag("content");
-		$xml_writer->cdata($comment_class->{description});
-		$xml_writer->endTag("content");
-		
-		$xml_writer->emptyTag("password");
-		
-		$xml_writer->startTag("secret");
-		$xml_writer->cdata($comment_class->{is_secret});
-		$xml_writer->endTag("secret");
-		
-		$xml_writer->startTag("written");
-		$xml_writer->cdata($comment_class->{time});
-		$xml_writer->endTag("written");
-		
-		
-#		답댓글이면 자신의 것(답댓글) 태그 닫기.
-		if(0 == $comment_class->{is_root})
+	#	루프.
+	#	각 배열별로 살펴본 후 xml에 쓰기
+		for ( ; $comment_point <= $end_point ; $comment_point++)
 		{
-			$xml_writer->endTag("comment");
-		}
+			$comment_class = $all_comment->[$comment_point];
+			
+	#		xml에 comment를 작성한다.
+			$xml_writer->startTag("comment");
+			
+	#		commenter 태그 작성.
+			$xml_writer->startTag("commenter");
+			
+			$xml_writer->startTag("name");
+			$xml_writer->characters($comment_class->{who});
+			$xml_writer->endTag("name");
+			
+			$xml_writer->startTag("homepage");
+			$xml_writer->characters($comment_class->{href});
+			$xml_writer->endTag("homepage");
+			
+			$xml_writer->emptyTag("ip");
+			
+			$xml_writer->endTag("commenter");
+			
+	#		나머지 태그 작성
+			$xml_writer->startTag("content");
+			$xml_writer->cdata($comment_class->{description});
+			$xml_writer->endTag("content");
+			
+			$xml_writer->emptyTag("password");
+			
+			$xml_writer->startTag("secret");
+			$xml_writer->cdata($comment_class->{is_secret});
+			$xml_writer->endTag("secret");
+			
+			$xml_writer->startTag("written");
+			$xml_writer->cdata($comment_class->{time});
+			$xml_writer->endTag("written");
+			
+			
+	#		답댓글이면 자신의 것(답댓글) 태그 닫기.
+			if(0 == $comment_class->{is_root})
+			{
+				$xml_writer->endTag("comment");
+			}
+			
+	#		마지막이거나 다음 것이 root comment라면 root comment 태그 닫기
+	#		Perl은 어떠할지 모르나 lazy evaluation이 적용되는 것이라면,
+	#		앞의 문이 true라면 뒤의 것은 실행하지 않을 것이다.
+	#		따라서 설령 뒤의 것이 boundary를 넘어서 살펴보는 버그를 일으키는 코드가 될 수 있을지라도
+	#		그 때는 이미 앞의 것이 true가 되어 실행되지 않을 것이기에 문제가 없을 것이다.
+	#		하지만 이는 안되는 듯싶어 ||이 아니라 elsif로 처리.
+			if($comment_point == $end_point)
+			{
+				$xml_writer->endTag("comment");
+			}
+			elsif(1 == $all_comment->[$comment_point+1]->{is_root})
+			{
+				$xml_writer->endTag("comment");
+			}
+		}	# for 문 종료.
+	}
+	else
+	{
+		# 메뉴릿
+		# 반대 방향으로 읽어야 한다.
+		my $comment_point = $the_post->{end_comments};
+		my $end_point = $the_post->{start_comments};
 		
-#		마지막이거나 다음 것이 root comment라면 root comment 태그 닫기
-#		Perl은 어떠할지 모르나 lazy evaluation이 적용되는 것이라면,
-#		앞의 문이 true라면 뒤의 것은 실행하지 않을 것이다.
-#		따라서 설령 뒤의 것이 boundary를 넘어서 살펴보는 버그를 일으키는 코드가 될 수 있을지라도
-#		그 때는 이미 앞의 것이 true가 되어 실행되지 않을 것이기에 문제가 없을 것이다.
-#		하지만 이는 안되는 듯싶어 ||이 아니라 elsif로 처리.
-		if($comment_point == $end_point)
+	#	루프.
+	#	각 배열별로 살펴본 후 xml에 쓰기
+		for ( ; $comment_point >= $end_point ; $comment_point--)
 		{
-			$xml_writer->endTag("comment");
-		}
-		elsif(1 == $all_comment->[$comment_point+1]->{is_root})
-		{
-			$xml_writer->endTag("comment");
-		}
-	}	# for 문 종료.
+			$comment_class = $all_comment->[$comment_point];
+			
+	#		xml에 comment를 작성한다.
+			$xml_writer->startTag("comment");
+			
+	#		commenter 태그 작성.
+			$xml_writer->startTag("commenter");
+			
+			$xml_writer->startTag("name");
+			$xml_writer->characters($comment_class->{who});
+			$xml_writer->endTag("name");
+			
+			$xml_writer->startTag("homepage");
+			$xml_writer->characters($comment_class->{href});
+			$xml_writer->endTag("homepage");
+			
+			$xml_writer->emptyTag("ip");
+			
+			$xml_writer->endTag("commenter");
+			
+	#		나머지 태그 작성
+			$xml_writer->startTag("content");
+			$xml_writer->cdata($comment_class->{description});
+			$xml_writer->endTag("content");
+			
+			$xml_writer->emptyTag("password");
+			
+			$xml_writer->startTag("secret");
+			$xml_writer->cdata($comment_class->{is_secret});
+			$xml_writer->endTag("secret");
+			
+			$xml_writer->startTag("written");
+			$xml_writer->cdata($comment_class->{time});
+			$xml_writer->endTag("written");
+			
+			
+	#		답댓글이면 자신의 것(답댓글) 태그 닫기.
+			if(0 == $comment_class->{is_root})
+			{
+				$xml_writer->endTag("comment");
+			}
+			
+	#		마지막이거나 다음 것이 root comment라면 root comment 태그 닫기
+	#		Perl은 어떠할지 모르나 lazy evaluation이 적용되는 것이라면,
+	#		앞의 문이 true라면 뒤의 것은 실행하지 않을 것이다.
+	#		따라서 설령 뒤의 것이 boundary를 넘어서 살펴보는 버그를 일으키는 코드가 될 수 있을지라도
+	#		그 때는 이미 앞의 것이 true가 되어 실행되지 않을 것이기에 문제가 없을 것이다.
+	#		하지만 이는 안되는 듯싶어 ||이 아니라 elsif로 처리.
+			if($comment_point == $end_point)
+			{
+				$xml_writer->endTag("comment");
+			}
+			elsif(1 == $all_comment->[$comment_point-1]->{is_root})
+			{
+				$xml_writer->endTag("comment");
+			}
+		}	# for 문 종료.
+	}
 }
 
 

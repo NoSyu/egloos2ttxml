@@ -133,7 +133,7 @@ sub new ($$$$\%\@)
 #		새로운 것 추가.
 #		메뉴릿이라고 하는 것이 생겼는데 여기서 이런 일이 발생하고 있다.
 		my %open_close;
-		$open_close{post} = 'private';	# 일단 이글루스가 비공개 처리한 글이라고 가정한다.
+		$open_close{post} = 'public';	# 메뉴릿이 더 많은 것이라 가정하자.
 		$open_close{comment} = 0;
 		$open_close{trackback} = 0;
 		
@@ -152,6 +152,21 @@ sub new ($$$$\%\@)
 			return -1;
 		}
 		
+		# 메뉴릿인지 이글루스가 블라인드 한 것인지 확인한다.
+		# 제목 옆에 잠금 표시가 있으면 비밀글이다.
+		# <div class="subject"><h3><img src="http://md.egloos.com/img/eg/post_security.gif" width="13" height="16" align="absmiddle"/>
+		my $private_icon_needle = '<div class="subject"><h3><img src="http://md.egloos.com/img/eg/post_security.gif" width="13" height="16" align="absmiddle"/>';
+		if($the_post->{content_html} =~ m/$private_icon_needle/ig)
+		{
+			# 찾았기에 비밀글이다. 즉, 블라인드 한 글
+			$the_post->{visibility} = 'private';
+		}
+		else
+		{
+			# 찾지 못했기에 메뉴릿이다.
+			$the_post->{is_menu_page} = 1;
+		}
+		
 #		xml 파일 쓰기.
 		BackUpEgloos_Subs::write_post_xml($filename, $the_post);
 		
@@ -165,9 +180,9 @@ sub new ($$$$\%\@)
 		$postid_index->{$postid} = scalar(@$all_post) - 1;
 		
 #		유저에게 임시 조치한 글이 있음을 알리고, 따로 txt 파일로 만든다.
-		BackUpEgloos_Subs::my_print("이글루스가 임시 조치한 글을 추가하였습니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . " - 제목 : " . $the_post->{title} . "\n");
+		BackUpEgloos_Subs::my_print("이글루스가 임시 조치한 글 혹은 메뉴릿을 추가하였습니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . " - 제목 : " . $the_post->{title} . "\n");
 #		>>으로 처리하여 기존의 글에 추가한다.
-		open(OUT, ">>:encoding(utf8) " , 'Egloos_blind.txt') or die $!;
+		open(OUT, ">>:encoding(utf8) " , 'Egloos_blind_or_menu.txt') or die $!;
 		print OUT $postid . ' : ' .$the_post->{title} . "\n\n";
 		close(OUT);
 		
