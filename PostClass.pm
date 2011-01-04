@@ -40,6 +40,7 @@ my $content_html; # content html 저장. - 2009-1-11 추가.
 # 따라서 글에 대한 정보를 저장할 때 가공하지 않은 html 코드를 저장하기로 함.
 # 대신 페이지 전부가 아닌 글, 트랙백, 댓글이 있는 부분만 저장한다.
 
+
 #생성자
 sub new ($$$\%%)
 {
@@ -58,9 +59,7 @@ sub new ($$$\%%)
 		# 웹페이지의 자료를 가져옴. 모바일 페이지의 것을 가져옴.
 		my $content_html = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/' . $postid, 0);
 		
-		# 그냥 웹페이지에서 가져오자.
-		#BackUpEgloos_Subs::print_txt("에러로 인해 " . $postid ."의 글을 XMLRPC가 아닌 웹페이지에서 자료를 가져옵니다.\n");
-		
+		# 변수 할당		
 		$title = BackUpEgloos_Subs::findstr($content_html, '<div class="subject"><h3>(?:<img[^>]*> )?', '</h3>');
 		$link = $egloosinfo->{blogurl} . '/' . $postid;
 		$description = BackUpEgloos_Subs::findstr($content_html, '<div class="contents">', '<div class="wrap_tag">');
@@ -98,8 +97,43 @@ sub new ($$$\%%)
 		$acceptComment = $open_close{comment};
 		$acceptTrackback = $open_close{trackback};
 #		트랙백, 댓글 개수
-		$trackback_count = $open_close{trackback_cnt};
-		$comment_count = $open_close{comment_cnt};
+		if(0 == $acceptComment)
+		{
+			# 댓글을 더 이상 쓸 수 없기에 관리 페이지에 나오지 않음.
+			$comment_count = 0;	# 기본적으로 0
+			# 그리고 찾음.
+			# 이렇게 하는 이유는 댓글이 0인 경우 해당 글에서 댓글 개수를 아예 보여주지 않음.
+			# 예제
+			# <div class="reply"><a href="/m/comment/2500689">덧글 <span> 17</span></a><span class="line">&nbsp;</span> <a href="/m/trackback/2500689">관련글 <span>3</span></a>                </div>            </div>
+			if($content_html =~ m/<div class="reply"><a[^>]*?>덧글 <span> ([0-9]+?)<\/span>/ig)
+			{
+				# 찾았기에 찾은 내용물을 반환.
+				$comment_count = $1;
+			}
+		}
+		else
+		{
+			$comment_count = $open_close{comment_cnt};
+		}
+		
+		if(0 == $acceptTrackback)
+		{
+			# 트랙백을 더 이상 쓸 수 없기에 관리 페이지에 나오지 않음.
+			$trackback_count = 0;	# 기본적으로 0
+			# 그리고 찾음.
+			# 이렇게 하는 이유는 댓글이 0인 경우 해당 글에서 댓글 개수를 아예 보여주지 않음.
+			# 예제
+			# <div class="reply"><a href="/m/comment/2500689">덧글 <span> 17</span></a><span class="line">&nbsp;</span> <a href="/m/trackback/2500689">관련글 <span>3</span></a>                </div>            </div>
+			if($content_html =~ m/<a href="\/m\/trackback\/$postid">관련글 <span>([0-9]+?)<\/span>/ig)
+			{
+				# 찾았기에 찾은 내용물을 반환.
+				$trackback_count = $1;
+			}
+		}
+		else
+		{
+			$trackback_count = $open_close{trackback_cnt};
+		}
 		
 #		postid로 디렉토리 만들기. - 있는 경우 처리.
 		if(!(-e './data/' . $postid))

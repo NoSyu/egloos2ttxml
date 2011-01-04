@@ -129,6 +129,7 @@ sub new ($$$$\%\@)
 #		이 문제가 발생하는 이유는 글 목록에 해당 글이 없기에 발생한다.
 #		따라서 새롭게 Post를 만든다.
 #		이글루스가 닫았으니 글은 비공개, 댓글, 트랙백도 전부 닫기.
+
 		my %open_close;
 		$open_close{post} = 'private';
 		$open_close{comment} = 0;
