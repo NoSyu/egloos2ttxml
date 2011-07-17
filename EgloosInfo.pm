@@ -89,8 +89,8 @@ sub getBlogInfo
 	my $egloosurl = 'http://www.egloos.com';
 	
 #	needle 즉, 찾을 문자열의 앞뒤를 설정
-#	예제 : <li class="start"><a href="http://NoSyu5508.egloos.com">내이글루
-	my $needle1 = '<li class="start"><a href="'; # 이글루 주소
+#	예제 : <a href="http://dongdm.egloos.com/" title="내 이글루 가기" onclick="statClick('egsm1','RLA16');">내이글루</a>
+	my $needle1 = '<a href="'; # 이글루 주소
 #	예제 : <a href="http://www.egloos.com/egloo/insert.php?eid=f0012026">New Post</a>
 	my $needle2 = '<a href="http://www.egloos.com/adm/chgadm_main.php\?eid='; # 첫 페이지에서 숨겨진 아이디를 찾는 needle - ?가 들어가면 제대로 못 찾는다.
 #	예제 : <span style="float: left;" class="subtitle4">포스트</span> <span style="float: right;">23</span><br/>
@@ -100,7 +100,7 @@ sub getBlogInfo
 	my $result = BackUpEgloos_Subs::getpage($egloosurl, 0);
 
 	# 블로그 주소를 가져온다.
-	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '"');
+	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '"[^>]+>내이글루');
 	
 	# 블로그의 eid를 가져온다.
 	#$EgloosInfo::mech->get($blogurl);

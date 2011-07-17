@@ -106,6 +106,12 @@ sub new ($$$$$\%\@)
 		$time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
 	}
+	elsif($content =~ m/<span>(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span>((?:(?!onclick="delTrackback\('(?!$trackbackid)[0-9]+?', '$postid').)*?)onclick="delTrackback\($end_needle/i)
+	{
+		# 올해의 것
+		$time = DateTime->new(year => DateTime->now()->year(), month  => $1, day => $2,
+						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
+	}
 	else
 	{
 		# 못 찾았기에 관리 페이지에 있는 것을 한다. 이것은 0시 0분 0초가 된다.

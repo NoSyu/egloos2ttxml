@@ -223,6 +223,14 @@ sub new ($$$$\%\@)
 		$description = $6;
 		chomp($description);
 	}
+	elsif($content =~ m/<span>(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
+	{
+		# 올해의 것
+		$time = DateTime->new(year => DateTime->now()->year(), month  => $1, day => $2,
+						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');	
+		$description = $5;
+		chomp($description);
+	}
 	else
 	{
 		# 본문에 얻기 힘드니 관리 페이지에서 가져오자.
@@ -232,8 +240,10 @@ sub new ($$$$\%\@)
 						
 		$comment_field =~ m/<td width="395" class="black"><a href="[^"]+" title="(.*?)" target="_new">(?:.*?)<\/a>/i;
 		$description = $1;
-		
-		BackUpEgloos_Subs::my_print("댓글 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $commentid . "\n");
+		if(0 == $all_post->[$postid_index->{$postid}]->{is_menu_page})
+		{
+			BackUpEgloos_Subs::my_print("댓글 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $commentid . "\n");
+		}
 	}
 	$time = $time->epoch();
 	
@@ -246,7 +256,9 @@ sub new ($$$$\%\@)
 		$description =~ s/&gt;/>/ig;
 	#	&amp; -> &
 		$description =~ s/&amp;/&/ig;
-
+	#	<br><br /><br/> -> \n
+		$description =~ s/<br[ \/]*?>/\n/ig;
+		
 #	저장할 변수를 hash로 만든다.
 #	여기에 대해서 NoSyu도 가르쳐 줄만큼 명확하게 이해하지 않았기에 코드를 생략한다.
 #	다만, Package에서 변수 등록을 이렇게 하는 것이고, 좀 더 자세한 것은 Perl 책을 참조하기를 바란다.

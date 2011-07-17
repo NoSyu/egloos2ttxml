@@ -64,7 +64,7 @@ sub new ($$$\%%)
 		# 변수 할당		
 		$title = BackUpEgloos_Subs::findstr($content_html, '<div class="subject"><h3>(?:<img[^>]*> )?', '</h3>');
 		$link = $egloosinfo->{blogurl} . '/' . $postid;
-		$description = BackUpEgloos_Subs::findstr($content_html, '<div class="contents">', '<div class="wrap_tag">');
+		$description = BackUpEgloos_Subs::findstr($content_html, '<!-- 2011.05 개선 //-->', '<div class="wrap_tag">');
 		if($content_html =~ m/<span class="cate"><a [^>]+>(.*?)<\/a>/ig)
 		{
 			$category = $1;
@@ -252,7 +252,7 @@ sub new ($$$\%%)
 		start_trackbacks=>$start_trackbacks, end_trackbacks=>$end_trackbacks,
 		start_comments=>$start_comments, end_comments=>$end_comments,
 		trackback_count=>$trackback_count, comment_count=>$comment_count,
-		content_html=>$content_html, is_menu_page=>$is_menu_page};
+		content_html=>$content_html, is_menu_page=>0};
 	}
 #	파일이 존재하니 불러오기.
 #	즉, 이미 다운로드를 받았기에 새롭게 다운로드를 받을 필요가 없다는 뜻임.

@@ -20,7 +20,7 @@ BEGIN {
 }
 
 #메시지 출력
-my_print("\t\t\tEgloos2TTXML ver 0.0.9.2\n");
+my_print("\t\t\tEgloos2TTXML ver 0.0.9.3\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
 my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
@@ -46,6 +46,21 @@ my_print("이 프로그램으로 백업이나 이사하셨으면 제 블로그�
 my_print("나름 보람을 느끼고 싶은 NoSyu의 부탁입니다.\n");
 my_print("=================================부탁드립니다!=================================\n");
 my_print("===============================================================================\n\n");
+
+#	OS에 따라 처리.
+#	Linux이면 그대로 출력하고 Windows이면 cp949에 맞게 처리.
+if('linux' eq $^O)
+{
+#	리눅스.
+	my $script_exe = 'firefox ';
+	system($script_exe . "nosyu.pe.kr/tag/Egloos2TTXML &");
+}
+elsif('MSWin32' eq $^O)
+{
+#	윈도우.
+	my $script_exe = '@start "" /b "C:\Program Files\Internet Explorer\iexplore.exe" ';
+	system($script_exe . "nosyu.pe.kr/tag/Egloos2TTXML");
+}
 
 #이글루스 정보 가져오기
 my $egloosinfo; # 이 프로그램은 다중 계정을 지원하지 않기에 하나만 생성한다.
