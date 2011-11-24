@@ -480,7 +480,7 @@ sub write_comments ($\@$)
 #	방식은 위에 write_trackbacks와 동일하다.
 #	대신 메뉴릿 때문에 읽는 순서를 바꿔야 할 필요가 있다.
 #	최적화를 우선으로 하여 먼저 if문으로 확인 후 for문을 달린다.
-
+	
 	if(0 == $the_post->{is_menu_page})
 	{
 		# 보통글
@@ -1021,7 +1021,7 @@ sub get_all_post ($\%)
 #					xml 파일 쓰기.
 					write_post_xml($filename, $the_post);
 				}
-
+				
 #				배열에 글 정보 저장.
 				push @all_post, $the_post;
 				
@@ -1479,6 +1479,10 @@ sub write_post_xml ($$)
 	$xml_writer->characters($the_post->{comment_count});
 	$xml_writer->endTag("comment_count");
 	
+	$xml_writer->startTag("is_menu_page");
+	$xml_writer->characters($the_post->{is_menu_page});
+	$xml_writer->endTag("is_menu_page");
+	
 	$xml_writer->startTag("content_html");
 #	에러 발생 - 2009.1.12 - 이유는 유니코드 때문인 듯...
 #	확인하니 그 문자는 xml에 담을 수 없다고 나옴. 그래서 지우라고 함.;;;
@@ -1541,43 +1545,83 @@ sub writeTTXML($$$$\@\@\@\%)
 	# XML-RPC를 통해 카테고리들을 받아온다.
 	# 이 코드는 예전에 이글루스 백업 프로그램을 만들 때 쓴 것을 그대로 가져왔다.
 	# 정확하게는 파일을 나눈 틀은 그대로 가져왔고, 수정 및 추가를 하였으니...
-	my_print("XML-RPC API를 통해 카테고리를 가지고 오는 중...\n");
-	my $cli = RPC::XML::Client->new($egloosinfo->apiurl());
-	my $req = RPC::XML::request->new('metaWeblog.getCategories', '0', $egloosinfo->id(), $egloosinfo->apikey());
-	my $resp = $cli->send_request($req);
-	my $results = $resp->value();
+	#my_print("XML-RPC API를 통해 카테고리를 가지고 오는 중...\n");
 	
-	# 가져온 카테고리 자료를 가지고 하나씩 xml 파일을 작성한다.
-	# $results 앞에 @을 붙인 이유는 해당 변수를 배열로 생각하라는 뜻이다.
+	# 예전에 작성한 것.
+	# XML-RPC로 하니까 잘 안 된다고 하여 모바일에서 가져오게함.
+	# 결국 XML-RPC는 쓰이지 않게 되었음. 
+	#my $cli = RPC::XML::Client->new($egloosinfo->apiurl());
+	#my $req = RPC::XML::request->new('metaWeblog.getCategories', '0', $egloosinfo->id(), $egloosinfo->apikey());
+	#my $resp = $cli->send_request($req);
+	#my $results = $resp->value();
+	
+#	# 가져온 카테고리 자료를 가지고 하나씩 xml 파일을 작성한다.
+#	# $results 앞에 @을 붙인 이유는 해당 변수를 배열로 생각하라는 뜻이다.
+#	my $priority_id = 1;
+#	foreach (@$results)
+#	{
+#		# foreach 구문 안에서 $_은 괄호 안의 것이 하나씩 나타낸다.
+#		# $_ 앞에 %을 붙인 이유는 위에 @$results의 경우와 비슷하다.
+#		# 자세한 것은 Perl 책을 참고하자.
+#		my %temp = %$_;
+#	#	카테고리가 전체인 경우 제외한다.
+#	#	이는 Textcube에도 전체는 따로 등록하는 것이 아니라 알아서 처리하기 때문이다.
+#		if($temp{title} !~ m/전체/)
+#		{
+#	#		카테고리 태그 시작
+#			$xml_writer->startTag("category");
+#			
+#	#		이름 태그 시작
+#			$xml_writer->startTag("name");
+#			$xml_writer->characters($temp{title});
+#			$xml_writer->endTag("name");
+#			
+#	#		이글루스의 경우 카테고리 밑에 카테고리는 존재하지 않는다.
+#	#		위의 설명은 틀렸다.
+#	#		priority는 카테고리의 순서를 나타내는 것이다.
+#			$xml_writer->startTag("priority");
+#			$xml_writer->characters($priority_id);
+#			$xml_writer->endTag("priority");
+#			$xml_writer->endTag("category");
+#			$priority_id++;
+#		}
+#	}
+
+	# mobile page에 접근
+	my_print("mobile page를 통해 카테고리를 가지고 오는 중...\n");
+	my $result_page = getpage($egloosinfo->{blogurl} . '/m/category', 0);
+	$result_page = findstr($result_page, '<ul class="prev_list">', '</ul>');
+	
+	my @results = split /<\/span>/, $result_page;
+	
 	my $priority_id = 1;
-	foreach (@$results)
+	foreach (@results)
 	{
-		# foreach 구문 안에서 $_은 괄호 안의 것이 하나씩 나타낸다.
-		# $_ 앞에 %을 붙인 이유는 위에 @$results의 경우와 비슷하다.
-		# 자세한 것은 Perl 책을 참고하자.
-		my %temp = %$_;
+		my $target_category = findstr($_, '<li [^>]+?>', ' <span>');
+		chomp($target_category);
+		if($target_category =~ /-1/)
+		{
+			next;
+		}
+		
 	#	카테고리가 전체인 경우 제외한다.
 	#	이는 Textcube에도 전체는 따로 등록하는 것이 아니라 알아서 처리하기 때문이다.
-		if($temp{title} !~ m/전체/)
-		{
-	#		카테고리 태그 시작
-			$xml_writer->startTag("category");
-			
-	#		이름 태그 시작
-			$xml_writer->startTag("name");
-			$xml_writer->characters($temp{title});
-			$xml_writer->endTag("name");
-			
-	#		이글루스의 경우 카테고리 밑에 카테고리는 존재하지 않는다.
-	#		위의 설명은 틀렸다.
-	#		priority는 카테고리의 순서를 나타내는 것이다.
-			$xml_writer->startTag("priority");
-			$xml_writer->characters($priority_id);
-			$xml_writer->endTag("priority");
-			$xml_writer->endTag("category");
-			$priority_id++;
-		}
+	#	카테고리 태그 시작
+		$xml_writer->startTag("category");
+		
+	#	이름 태그 시작
+		$xml_writer->startTag("name");
+		$xml_writer->characters($target_category);
+		$xml_writer->endTag("name");
+		
+	#	priority는 카테고리의 순서를 나타내는 것이다.
+		$xml_writer->startTag("priority");
+		$xml_writer->characters($priority_id);
+		$xml_writer->endTag("priority");
+		$xml_writer->endTag("category");
+		$priority_id++;
 	}
+
 	my_print("카테고리 가져오기 완료.\n\n");
 	
 	

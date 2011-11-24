@@ -252,7 +252,7 @@ sub new ($$$\%%)
 		start_trackbacks=>$start_trackbacks, end_trackbacks=>$end_trackbacks,
 		start_comments=>$start_comments, end_comments=>$end_comments,
 		trackback_count=>$trackback_count, comment_count=>$comment_count,
-		content_html=>$content_html, is_menu_page=>0};
+		content_html=>$content_html, is_menu_page=>$is_menu_page};
 	}
 #	파일이 존재하니 불러오기.
 #	즉, 이미 다운로드를 받았기에 새롭게 다운로드를 받을 필요가 없다는 뜻임.
@@ -395,18 +395,18 @@ sub changeimgsrc_m($$)
 	# http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
 	# http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
 	# <img border="0" src="http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg" width="300" alt="500" onclick="egloo_img_resize(this, 'http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg');" />
-	while($description =~ m/<img ((?:.*?) onclick="egloo_img_resize\(this, '(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))'[^>]*)>/igc)
+	while($description =~ m/<img ((?:.*?) alt="(.*?)" onclick="egloo_img_resize\(this, '(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))'[^>]*)>/igc)
 	{
 #		예제.
 #		<img border="0" src="http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg" width="300" alt="500" onclick="egloo_img_resize(this, 'http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg');" />
 #		$img_url = http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
 #		$img_extension = jpg
 		my $img_info_html = $1; # 그림 정보.
-		my $img_url = $2; # 그림 url
-		my $img_extension = $3; # 그림 파일 확장자
+		my $img_url = $3; # 그림 url
+		my $img_extension = $4; # 그림 파일 확장자
 		my $width = ''; # 그림 넓이.
 		my $height = ''; # 그림 높이.
-		my $alt = ''; # 그림 설명.
+		my $alt = $2; # 그림 설명.
 		
 #		이미지 저장할 경로 설정.
 		my $istr = BackUpEgloos_Subs::numtonumstr($i);
@@ -425,9 +425,10 @@ sub changeimgsrc_m($$)
 	#		XML 파일에 적기위해 치환자 설정.
 	#		예제.
 	#		[##_1C|1044461297.png|width="490" height="88.1072555205" alt=""| _##]
-			my $img_info = 'width="' . $width .
+	
+			my $img_info = 'width="' . $width .			# mobile에서는 alt가 실제 img의 width
 							'" height="' . $height .
-							'" alt="' . $alt . '"';
+							'" alt=""';
 			$img_dest = '[##_1C|' . $istr . '.' . $img_extension . '|' . $img_info . '| _##]'; # TTXML에 맞게 이름 설정.
 			$ori_post_html =~ s/<img (?:.*?) onclick="egloo_img_resize\(this, '$img_url'[^>]*>/$img_dest/ig; # 이름 바꾸기.
 			$i++; # 파일명을 하나 증가.

@@ -20,7 +20,7 @@ BEGIN {
 }
 
 #메시지 출력
-my_print("\t\t\tEgloos2TTXML ver 0.0.9.3\n");
+my_print("\t\t\tEgloos2TTXML ver 0.0.9.4\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
 my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
@@ -180,7 +180,6 @@ while(1)
 			}
 		}
 		
-		
 		# 2번을 하기 위해 불러온다.
 		my_print("리스트 가져오는 중...\n");
 		get_all_list($egloosinfo);
@@ -194,9 +193,7 @@ while(1)
 		@all_comment = get_all_comment($egloosinfo, @all_post, %postid_index);
 		my_print("댓글 다 가져왔습니다...\n\n");
 		
-		
 		my $all_post_count = scalar(@all_post); # all_post의 요소 개수.
-		my $how_many = 100; # 일단 100으로 할당. 후에 사용자 입력을 받도록 하자.
 		
 		#	정렬.
 		@all_post = sort { $a->{postid} cmp $b->{postid} } @all_post;
@@ -216,6 +213,12 @@ while(1)
 		{
 			# 여러 개로 나눠서 적는다.
 			my $i = 0; # $how_many개씩의 배열 조각.
+			
+			my_print("\n하나의 XML파일에 몇 개의 글을 담으시겠습니까?\n");
+			my_print("1 이상의 숫자를 입력해주세요.\n> ");
+			my $how_many = <STDIN>;
+			chomp($how_many);
+			
 			while(($i * $how_many) <= $all_post_count)
 			{
 				$i++; # number를 증가시킨다.
