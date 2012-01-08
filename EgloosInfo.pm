@@ -9,6 +9,7 @@ use WWW::Mechanize; # 웹페이지에 접근하는 아주 훌륭한 라이브러
 use utf8; # 이글루스 정보들은 encoding으로 utf8으로 되어있기에 사용.
 
 $EgloosInfo::mech = WWW::Mechanize->new(autocheck => 0);	# mesh 인자, autocheck를 0으로 설정하여 이 기능을 껐음. 따라서 에러가 발생해도 die로 죽지 않고, warning으로 내가 처리할 수 있게 되었다.
+#$EgloosInfo::is_use_mobile = 0;
 # 밑에 변수 옆에 얻는 함수를 적은 이유는 예전 코드의 영향이다.
 # 사실 지우는 것이 조금 더 깔끔하고 좋겠지만, 일단 개인적인 이유로 남겨두었다.
 # 리팩토링으로 삭제하여도 문제 없다.
@@ -34,7 +35,7 @@ sub new ($$$)
 #	클래스 이름 전달
 	my $class = shift;
 #	아이디와 비밀번호, 새로운 블로그를 받음.
-	my ($id, $pw, $newblogurl) = @_;
+	my ($id, $pw, $newblogurl, $is_use_mobile) = @_;
 	
 #	로그인하기
 	BackUpEgloos_Subs::my_print("로그인 중...\n");
@@ -65,7 +66,8 @@ sub new ($$$)
 	my $self = { apikey=>$apikey, apiurl=>$apiurl,
 		blogurl=>$blogurl, eid=>$eid, post_num=>$post_num,
 		id=>$id, blog_title=>$blog_title, author=>$author, newblogurl=>$newblogurl,
-		post_count=>$post_count, trackback_count=>$trackback_count, comment_count=>$comment_count};
+		post_count=>$post_count, trackback_count=>$trackback_count, comment_count=>$comment_count,
+		is_use_mobile=>$is_use_mobile};
 #	referencing
 	bless ($self, $class);
 	

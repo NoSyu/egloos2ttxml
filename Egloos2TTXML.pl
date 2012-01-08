@@ -23,7 +23,7 @@ BEGIN {
 my_print("\t\t\tEgloos2TTXML ver 0.0.9.4\n");
 my_print("\t\t\t\t\t\t- NoSyu's TOYBOX with Perl\n\n");
 my_print("이글루스를 백업하거나 Textcube, 티스토리로 이사할 수 있는 xml파일을 만듭니다.\n");
-my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림과 zip, pdf파일도 백업합니다.\n\n");
+my_print("로그인을 하기에 비밀글과 비밀댓글도 가져오며, 그림파일을 백업합니다.\n\n");
 
 my_print("그림과 글 정보는 data 폴더에 Post ID별로 생성됩니다.\n");
 my_print("또한, posts, trackbacks, comments라는 폴더 안에 리스트들이 저장되어 있습니다.\n");
@@ -64,6 +64,24 @@ elsif('MSWin32' eq $^O)
 
 #이글루스 정보 가져오기
 my $egloosinfo; # 이 프로그램은 다중 계정을 지원하지 않기에 하나만 생성한다.
+my $is_use_mobile;
+# 그림 파일의 위치 묻기 
+while(1)
+{
+	my_print("그림 파일은 어느 곳에서 가져올까요?\n");
+	my_print("0. 모바일 페이지\n1. 메인 페이지\n> ");
+	$is_use_mobile = <STDIN>;
+	chomp($is_use_mobile);
+	
+	if('0' eq $is_use_mobile || '1' eq $is_use_mobile)
+	{
+		last;
+	}
+	else
+	{
+		my_print("0 혹은 1를 입력해주세요.\n\n");
+	}
+}
 # 실행 시 들어온 인자가 두 개 혹은 세 개인 경우 그것을 아이디, 비밀번호, 새로운 블로그 주소로 인식한다.
 # 새로운 블로그 주소는 옵션이다.
 # 처음에는 이렇게 만들었으나 배포 시 사람들이 CUI에 익숙하지 않아서 인자 없이 실행시 STDIN으로 자료를 받기로 함.
@@ -72,7 +90,7 @@ if(1 == $#ARGV)
 	# 들어온 인자가 두 개이기에 아이디와 비밀번호만 전달.
 	my_print("로그인을 통해 이글루스 정보를 가져오는 중...\n");
 	# 그리고 새로운 블로그 주소는 ''으로 처리한다. 이로서 EgloosInfo에서는 입력이 들어오지 않았다는 것을 알 수 있다.
-	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], '');
+	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], '', $is_use_mobile);
 	
 }
 elsif(2 == $#ARGV)
@@ -80,7 +98,7 @@ elsif(2 == $#ARGV)
 	# 들어온 인자가 세 개임.
 	my_print("로그인을 통해 이글루스 정보를 가져오는 중...\n");
 	# 차례대로 넣는다.
-	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], $ARGV[2]);
+	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], $ARGV[2], $is_use_mobile);
 }
 # 기존에는 그냥 die 시켰으나 사용자들을 위해 입력을 받도록 추가 - 2009.1.15
 else
@@ -90,6 +108,7 @@ else
 	my $id;
 	my $pw;
 	my $newblogurl;
+	
 	
 	# 아이디를 받는다.
 	my_print("로그인을 위해 이글루스 아이디와 비밀번호, \n그리고 이사를 위해 새로운 블로그 주소를 넣어주세요.\n");
@@ -118,9 +137,9 @@ else
 	{
 		my_print("본문, 트랙백, 덧글 안의 기존 블로그 주소가 " . $newblogurl . "(으로/로) 바뀝니다.\n\n");
 	}
-	
+		
 	# Egloosinfo 변수를 생성한다.
-	$egloosinfo = EgloosInfo->new($id, $pw, $newblogurl);
+	$egloosinfo = EgloosInfo->new($id, $pw, $newblogurl, $is_use_mobile);
 }
 my_print("로그인 및 이글루스 정보 가져오기 완료.\n\n");
 

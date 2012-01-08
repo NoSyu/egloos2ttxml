@@ -239,9 +239,21 @@ sub new ($$$\%%)
 		
 		
 #		이미지 다운로드 받기.
+		#download_m($description, $postid);	# 다운로드 받기 - 백업용도로 처리
 #		이미지 다운로드 및 파일 다운로드 그리고 이름 변경까지 수행한다.
-		$description = changeimgsrc_m($description, $postid);
-		$description = changeimgsrc($description, $postid);
+		
+		if(1 == $egloosinfo->{is_use_mobile})
+		{
+			# PC 사용
+			my $content_html_pc = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/' . $postid, 0);
+			$description = BackUpEgloos_Subs::findstr($content_html_pc, "<div class='hentry'><span[^>]+?></span>", '<!--       <rdf:RDF xmlns:rdf="http');
+			$description = changeimgsrc($description, $postid);
+		}
+		else
+		{
+			# 모바일 페이지 사용 
+			$description = changeimgsrc_m($description, $postid);
+		}
 		
 #		변수 등록.
 		$self = { postid=>$postid, description=>$description, time=>$time,
@@ -347,34 +359,34 @@ sub changeimgsrc($$)
 		}
 	} # end of  foreach my $img_elem (@img_elems)
 	
-#	zip, pdf 파일 받기.
-	while($description =~ m/"(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(pdf|zip))"/igc)
-	{
-#		예제.
-#		<a href="http://pds12.egloos.com/pds/200901/09/01/HW1334.zip">HW1334.zip</a>
-		my $file_url = $1; # 파일 url
-		my $file_extension = $2; # 파일 확장자
-		
-#		파일 저장할 경로 설정.
-		my $istr = BackUpEgloos_Subs::numtonumstr($i);
-		my $file_dest = 'data/' . $postid . '/' . $istr . '.' . $file_extension;
-#		다운로드.
-		if(-1 == BackUpEgloos_Subs::downImage($file_url, $file_dest, 0))
-		{
-#			에러가 발생한 것임.
-#			2009.1.22
-			BackUpEgloos_Subs::print_txt('파일 다운로드 에러 : ' . $file_url . ' 글 : ' . $postid . "\n하지만 프로그램은 계속 진행됩니다.");
-		}
-		
-		
-# 		페이지 안의 주소 수정
-#		XML 파일에 적기위해 치환자 설정.
-#		예제.
-#		[##_1C|Xaxm6sRB1x.PDF||_##]
-		$file_dest = '[##_1C|' . $istr . '.' . $file_extension . '|| _##]'; # TTXML 설정에 맞춤.
-		$ori_post_html =~ s/<a href="$file_url">(?:.*?)<\/a>/$file_dest/ig; # 바꾸기.
-		$i++; # 파일 이름 증가.
-	}
+
+##	zip, pdf 파일 받기.
+#	while($description =~ m/"(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(pdf|zip))"/igc)
+#	{
+##		예제.
+##		<a href="http://pds12.egloos.com/pds/200901/09/01/HW1334.zip">HW1334.zip</a>
+#		my $file_url = $1; # 파일 url
+#		my $file_extension = $2; # 파일 확장자
+#		
+##		파일 저장할 경로 설정.
+#		my $istr = BackUpEgloos_Subs::numtonumstr($i);
+#		my $file_dest = 'data/' . $postid . '/' . $istr . '.' . $file_extension;
+##		다운로드.
+#		if(-1 == BackUpEgloos_Subs::downImage($file_url, $file_dest, 0))
+#		{
+##			에러가 발생한 것임.
+##			2009.1.22
+#			BackUpEgloos_Subs::print_txt('파일 다운로드 에러 : ' . $file_url . ' 글 : ' . $postid . "\n하지만 프로그램은 계속 진행됩니다.");
+#		}
+#		
+## 		페이지 안의 주소 수정
+##		XML 파일에 적기위해 치환자 설정.
+##		예제.
+##		[##_1C|Xaxm6sRB1x.PDF||_##]
+#		$file_dest = '[##_1C|' . $istr . '.' . $file_extension . '|| _##]'; # TTXML 설정에 맞춤.
+#		$ori_post_html =~ s/<a href="$file_url">(?:.*?)<\/a>/$file_dest/ig; # 바꾸기.
+#		$i++; # 파일 이름 증가.
+#	}
 	
 	$file_count = $i-1; # 파일 개수 지정.
 	return $ori_post_html; # 이미지 주소를 바꾼 본문 내용을 반환.
@@ -438,5 +450,41 @@ sub changeimgsrc_m($$)
 	$file_count = $i-1; # 파일 개수 지정.
 	return $ori_post_html; # 이미지 주소를 바꾼 본문 내용을 반환.
 }
+
+sub download_m($$)
+{
+#	본문 안의 내용, post id 
+	my ($description, $postid) = @_;
+	# 다운로드 받아 저장할 src : 'pic/postid_XXX.jpg(png 등)'
+
+	my $i = 1; # 다운로드 받은 것들의 이름. 1부터 시작
+	
+	# 본문 안의 이미지 다운로드
+	# http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
+	# http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
+	# <img border="0" src="http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg" width="300" alt="500" onclick="egloo_img_resize(this, 'http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg');" />
+	while($description =~ m/<img ((?:.*?) alt="(.*?)" onclick="egloo_img_resize\(this, '(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))'[^>]*)>/igc)
+	{
+#		예제.
+#		<img border="0" src="http://thumb.egloos.net/460x0/http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg" width="300" alt="500" onclick="egloo_img_resize(this, 'http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg');" />
+#		$img_url = http://pds19.egloos.com/pds/201007/08/11/a0030011_4c35d1f77e1ad.jpg
+#		$img_extension = jpg
+		my $img_url = $3; # 그림 url
+		my $img_extension = $4; # 그림 파일 확장자
+		
+#		이미지 저장할 경로 설정.
+		my $istr = BackUpEgloos_Subs::numtonumstr($i);
+		my $img_dest = 'data/' . $postid . '/m_' . $istr . '.' . $img_extension;
+#		다운로드.
+		if(-1 == BackUpEgloos_Subs::downImage($img_url, $img_dest, 0))
+		{
+#			에러가 발생한 것임.
+#			2009.1.22
+			BackUpEgloos_Subs::print_txt('이미지 다운로드 에러 : ' . $img_url . ' 글 : ' . $postid . "\n하지만 프로그램은 계속 진행됩니다.");
+		}
+		$i++; # 파일명을 하나 증가.
+	} # end of  foreach my $img_elem (@img_elems)
+}
+
 
 1;
