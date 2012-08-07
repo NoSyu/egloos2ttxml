@@ -94,31 +94,16 @@ sub getBlogInfo
 #	예제 : <a href="http://dongdm.egloos.com/" title="내 이글루 가기" onclick="statClick('egsm1','RLA16');">내이글루</a>
 	my $needle1 = '<a href="'; # 이글루 주소
 #	예제 : <a href="http://www.egloos.com/egloo/insert.php?eid=f0012026">New Post</a>
-	my $needle2 = '<a href="http://www.egloos.com/adm/chgadm_main.php\?eid='; # 첫 페이지에서 숨겨진 아이디를 찾는 needle - ?가 들어가면 제대로 못 찾는다.
-#	예제 : <span style="float: left;" class="subtitle4">포스트</span> <span style="float: right;">23</span><br/>
-	my $needle3 = '포스트</span> <span style="float: right;">'; # 포스트 개수를 찾는 needle
+	#my $needle2 = '<a href="http://www.egloos.com/adm/chgadm_main.php\?eid='; # 첫 페이지에서 숨겨진 아이디를 찾는 needle - ?가 들어가면 제대로 못 찾는다.
+	my $needle2 = "'eglooid' : '"; # 이글루스가 개편하였기에 새롭게 찾아낸다. - NoSyu, 2012.08.07
+	
+	my $needle3 = '<div class="post">(?:.*?)<h3>post</h3>(?:.*?)<span>총 포스트 : '; # 포스트 개수를 찾는 needle
 	
 #	이글루스 메인 페이지를 가져온다.
 	my $result = BackUpEgloos_Subs::getpage($egloosurl, 0);
 
 	# 블로그 주소를 가져온다.
 	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '"[^>]+>내이글루');
-	
-	# 블로그의 eid를 가져온다.
-	#$EgloosInfo::mech->get($blogurl);
-	#$result = $EgloosInfo::mech->content();
-	$eid = BackUpEgloos_Subs::findstr($result, $needle2, '"');
-
-	# 포스트 개수를 가져온다.
-	# 내 기억으로 포스트 개수는 코드에서 쓰지 않는 것이다.
-	# 처음에는 포스트 개수에 맞춰 페이지에도 접근하는 등의 여러 일을 하려고 하였으나 단순히 목록을 살펴보는 것으로 처리함.
-	# 이유는 NoSyu.egloos.com의 경우 글 번호가 0과 -1이 있어 이글루 관리에 나오는 포스트 개수와 실제 개수가 다르다.
-	# 하지만 일단 코드를 남겨두었다. 리팩토링으로 불필요하다고 판단되면 주석처리한다.
-	my $postURL = 'http://www.egloos.com/adm/chgadm_main.php?eid=' . $eid;
-	$result = BackUpEgloos_Subs::getpage($postURL, 0);
-	$post_num = BackUpEgloos_Subs::findstr($result, $needle3, '</span>');
-#	1,000개 이상이면 콤마가 붙기에 이를 제거
-	$post_num =~ s/,//g;
 	
 #	블로그 제목 가져오기.
 #	예제.
@@ -132,31 +117,46 @@ sub getBlogInfo
 #	<meta name="author" content="NoSyu" />
 	$result =~ m/<meta name="author" content="(.*?)" \/>/i;
 	$author = $1;
+	
+# 블로그의 eid를 가져온다.
+		$eid = BackUpEgloos_Subs::findstr($result, $needle2, "'");
+		
+	my $adminURL = 'http://admin.egloos.com/';
+	
+	$result = BackUpEgloos_Subs::getpage($adminURL, 0);
+	
+	# 포스트 개수를 가져온다.
+	# 내 기억으로 포스트 개수는 코드에서 쓰지 않는 것이다.
+	# 처음에는 포스트 개수에 맞춰 페이지에도 접근하는 등의 여러 일을 하려고 하였으나 단순히 목록을 살펴보는 것으로 처리함.
+	# 이유는 NoSyu.egloos.com의 경우 글 번호가 0과 -1이 있어 이글루 관리에 나오는 포스트 개수와 실제 개수가 다르다.
+	# 하지만 일단 코드를 남겨두었다. 리팩토링으로 불필요하다고 판단되면 주석처리한다.
+		$post_num = BackUpEgloos_Subs::findstr($result, $needle3, '</span>');
+		
+	#	1,000개 이상이면 콤마가 붙기에 이를 제거
+	$post_num =~ s/,//g;
 }
 
 
 #API key값을 가져오는 함수
 sub getApiInfo
 {
-#	예제 : <dt>URL</dt> <dd>https://rpc.egloos.com/rpc1</dd>
-	my $needle1 = '<dt>URL</dt><dd>'; # APIURL을 찾는 needle
-#	예제 : <dt>API key</dt> <dd>API 키 값</dd> - old
-#	예제 : <dd><span id="rpckey">API 키 값</span>
-	my $needle2 = '<dt>APIkey</dt><dd><spanid="rpckey">'; # APIKey를 찾는 needle
-#	예제 : http://www.egloos.com/adm/api/chgapi_info.php?eid=f0012026
-	my $pageURL = 'http://www.egloos.com/adm/basic/chgegloo_info.php?eid=' . $eid;
+	my $needle1 = '<th>URL</th>(?:.*?)<td>'; # APIURL을 찾는 needle
+	my $needle2 = '<th>API Key</th>(?:.*?)<td>'; # APIKey를 찾는 needle
+	
+	my $pageURL = 'http://admin.egloos.com/blog/basic/popup/apikey';
 	
 	my $result = BackUpEgloos_Subs::getpage($pageURL, 0);
 	#공백을 모두 제거한다.
-	$_ = $result;
-	s/\s//g; # 여기서 띄어쓰기까지 전부 제거되기에 위에 needle이 조금 이상함.
+	#$_ = $result;
+	#s/\s//g; # 여기서 띄어쓰기까지 전부 제거되기에 위에 needle이 조금 이상함.
 	#s/[\n\r\t]//g;
+	
 	# 블로그의 APIURL을 가져온다.
-	$apiurl = BackUpEgloos_Subs::findstr($_, $needle1, '</dd>');
+		$apiurl = BackUpEgloos_Subs::findstr($result, $needle1, '</td>');
 	
 	# 블로그의 APIKey을 가져온다.
 	# APIKey 재발급이라는 것이 나타나고 조금 변화가 되어 제대로 작동하지 않았음 - 20090128
-	$apikey = BackUpEgloos_Subs::findstr($_, $needle2, '</span>');
+		$apikey = BackUpEgloos_Subs::findstr($result, $needle2, ' <span class="btns">');
 }
 
 # 이제 작업하지 않기에 주석 처리.

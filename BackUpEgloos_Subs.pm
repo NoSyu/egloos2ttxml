@@ -931,7 +931,9 @@ sub get_all_post ($\%)
 		else
 		{
 #			파일이 없기에 가져와서 저장하기.
-			my $postlistURL = 'http://www.egloos.com/adm/post/chgpost_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+#			http://admin.egloos.com/contents/blog/post/page/1?date=&category=&listcount=50&kwd=
+			# 이글루스 개편으로 인한 주소 수정 - NoSyu, 2012.08.07
+			my $postlistURL = 'admin.egloos.com/contents/blog/post/page/' . $i . '?date=&category=&listcount=50&kwd=';
 			$content = getpage($postlistURL, 0);
 			
 #			저장하기.
