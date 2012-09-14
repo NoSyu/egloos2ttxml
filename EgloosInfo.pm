@@ -98,6 +98,8 @@ sub getBlogInfo
 	my $needle2 = "'eglooid' : '"; # 이글루스가 개편하였기에 새롭게 찾아낸다. - NoSyu, 2012.08.07
 	
 	my $needle3 = '<div class="post">(?:.*?)<h3>post</h3>(?:.*?)<span>총 포스트 : '; # 포스트 개수를 찾는 needle
+	my $needle_trackback_count = '<div class="post">(?:.*?)<h3>post</h3>(?:.*?)<span>총 트랙백 : '; # 트랙백 개수를 찾는 needle
+	my $needle_comment_count = '<div class="post">(?:.*?)<h3>post</h3>(?:.*?)<span>총 덧글 : '; # 코멘트 개수를 찾는 needle
 	
 #	이글루스 메인 페이지를 가져온다.
 	my $result = BackUpEgloos_Subs::getpage($egloosurl, 0);
@@ -130,8 +132,10 @@ sub getBlogInfo
 	# 처음에는 포스트 개수에 맞춰 페이지에도 접근하는 등의 여러 일을 하려고 하였으나 단순히 목록을 살펴보는 것으로 처리함.
 	# 이유는 NoSyu.egloos.com의 경우 글 번호가 0과 -1이 있어 이글루 관리에 나오는 포스트 개수와 실제 개수가 다르다.
 	# 하지만 일단 코드를 남겨두었다. 리팩토링으로 불필요하다고 판단되면 주석처리한다.
-		$post_num = BackUpEgloos_Subs::findstr($result, $needle3, '</span>');
-		
+	$post_num = BackUpEgloos_Subs::findstr($result, $needle3, '</span>');
+	$trackback_count = BackUpEgloos_Subs::findstr($result, $needle_trackback_count, '</span>');
+	$comment_count = BackUpEgloos_Subs::findstr($result, $needle_comment_count, '</span>');
+	
 	#	1,000개 이상이면 콤마가 붙기에 이를 제거
 	$post_num =~ s/,//g;
 }

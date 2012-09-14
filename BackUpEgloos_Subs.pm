@@ -820,14 +820,9 @@ sub get_all_list ($)
 	$i = 1;
 	
 	# 페이지 개수 가져오기.
-	my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+	my $listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '??listcount=50';
 	my $content = getpage($listURL, 0);
-	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
-	# <b>202</b>개 트랙백
-	$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
-	my $trackback_all_num = $1;
-	my $pagenum = ($trackback_all_num / 50) + 1;
-	$egloosinfo->{trackback_count} = $trackback_all_num;
+	my $pagenum = ($egloosinfo->{trackback_count} / 50) + 1;
 	
 #	trackback dat가 저장될 디렉토리 만들기.
 	if(!(-e './data/trackbacks'))
@@ -844,7 +839,7 @@ sub get_all_list ($)
 		if(!(-e $filename))
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '??listcount=50';
 			$content = getpage($listURL, 0);
 			
 #			저장하기.
@@ -859,14 +854,9 @@ sub get_all_list ($)
 	$i = 1;
 	
 	# 페이지 개수 가져오기.
-	$listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+	$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '??listcount=50';
 	$content = getpage($listURL, 0);
-	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
-	# <b>11802</b>개 덧글
-	$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
-	my $comment_all_num = $1;
-	$pagenum = ($comment_all_num / 50) + 1;
-	$egloosinfo->{comment_count} = $comment_all_num;
+	$pagenum = ($egloosinfo->{comment_count} / 50) + 1;
 	
 #	comment dat가 저장될 디렉토리 만들기.
 	if(!(-e './data/comments'))
@@ -883,7 +873,7 @@ sub get_all_list ($)
 		if(!(-e $filename))
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '??listcount=50';
 			$content = getpage($listURL, 0); # 개행 없이 저장.
 			
 #			저장하기.
