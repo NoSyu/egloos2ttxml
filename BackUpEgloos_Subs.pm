@@ -812,9 +812,9 @@ sub get_all_list ($)
 	my $i; # 리스트 페이지 넘버.
 	
 	# dat가 저장될 디렉토리 만들기.
-	if(!(-e './data/posts'))
+	if(!(-e './data/'))
 	{
-		mkdir('./data/posts') or die "폴더 만들기 에러.\n";
+		mkdir('./data/') or die "폴더 만들기 에러.\n";
 	}
 	
 	$i = 1;
@@ -939,21 +939,21 @@ sub get_all_post ($\%)
 		}
 		
 #		postid 찾아서 저장
-		my @post_fields = split /<tr bgcolor=/, $content;
+		my @post_fields = split /<tr><td><input type="checkbox" /, $content;
 		shift @post_fields; # 처음 것 제거.
 		
 #		post 하나씩 가져오기.
 		for my $post_field (@post_fields)
 		{
-			my $start_needle = '<td width="360" class="black"><a href="' . $egloosinfo->{blogurl} . '/';
+			my $start_needle = "<td class=\"sub\"><a href=\"" . $egloosinfo->{blogurl} . '/';
 			my $postid = findstr($post_field, $start_needle, '"');
 #			postid를 제대로 찾았다면 나머지 것도 얻는다.
 			if(-1 != $postid)
 			{
-				my %open_close; # 글, 트랙백과 덧글의 공개여부. PostClass 안에서 처리할 수 있으나 관리 페이지에 나오는 것이 좀 더 깔끔하게 처리할 수 있어 이렇게 hash로 만든 후 인자로 전달.
+				my %open_close; # 글의 공개여부.
 				
 #				글 공개여부.
-				$start_needle = '<img src="http://md.egloos.com/img/eg/post_security1.gif"';
+				$start_needle = '<i class="secret">비밀글</i>';
 				if($post_field =~ m/$start_needle/i)
 				{
 					$open_close{post} = 'private';
@@ -962,32 +962,44 @@ sub get_all_post ($\%)
 				{
 					$open_close{post} = 'public';
 				}
-#				덧글 공개여부
-				$start_needle = '<td width="45" align="center" class="red">x</td>';
-				if($post_field =~ m/$start_needle/i)
-				{
-					$open_close{comment} = 0;
-				}
-				else
-				{
-					$open_close{comment} = 1;
-				}
-#				트랙백 공개여부.
-				$start_needle = '<td width="50" align="center" class="red">x</td>';
-				if($post_field =~ m/$start_needle/i)
-				{
-					$open_close{trackback} = 0;
-				}
-				else
-				{
-					$open_close{trackback} = 1;
-				}
+				# 덧글과 트랙백의 공개 여부는 이제 더 이상 여기에서 알 수 없다.
+				# 모바일 환경이라면 다음과 같은 방법이 가능하다.
+				# 댓글 : 댓글창에 '이 포스트는 더 이상 덧글을 남길 수 없습니다.' 라는 말이 뜬다.
+				# 트랙백 : 글에 관련글 이라는 표시가 뜨지 않는다.
+##				덧글 공개여부
+#				$start_needle = '<td width="45" align="center" class="red">x</td>';
+#				if($post_field =~ m/$start_needle/i)
+#				{
+#					$open_close{comment} = 0;
+#				}
+#				else
+#				{
+#					$open_close{comment} = 1;
+#				}
+##				트랙백 공개여부.
+#				$start_needle = '<td width="50" align="center" class="red">x</td>';
+#				if($post_field =~ m/$start_needle/i)
+#				{
+#					$open_close{trackback} = 0;
+#				}
+#				else
+#				{
+#					$open_close{trackback} = 1;
+#				}
+
 #				시간 정보 - 1시간 전이라는 식으로 나와있는 경우가 있기에....
-				$open_close{datetime_info} = findstr($post_field, '<td width="80" align="center" class="black">', '</td>');
 #				댓글과 트랙백의 개수도 여기에 적습니다.
-				$open_close{comment_cnt} = findstr($post_field, '<td width="45" align="center" class="black">', '</td>');
-				$open_close{trackback_cnt} = findstr($post_field, '<td width="50" align="center" class="black">', '</td></tr>');
-						
+#				카테고리도 포함
+#				예제
+#				<td>2012-01-09</td><td title="미분류">미분류</td><td>8</td><td>0</td><td>0</td></tr>
+				if($post_field =~ m/<td>(.+?)<\/td><td(?:[^>]+?)>(.+?)<\/td><td>([0-9]+?)<\/td><td>([0-9]+?)<\/td><td>(?:[0-9]+?)<\/td><\/tr>/ig)
+				{
+					$open_close{datetime_info} = $1;
+					$open_close{category_info} = $2;
+					$open_close{comment_cnt} = $3;
+					$open_close{trackback_cnt} = $4;
+				}
+				
 #				파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-11
 #				여기서 말하는 파일은 post에 대한 정보가 담겨져있는 content.xml을 말함.
 #				이 파일은 PostClass를 만든 후 즉, 안의 그림파일이나 첨부파일을 다 다운로드 받은 후 저장되기에 이 파일이 존재한다는 말은 제대로 다 받았다는 것을 의미한다.
@@ -1054,11 +1066,6 @@ sub get_all_trackback ($\@\%)
 	my $content;
 	
 	# 페이지 개수 가져오기.
-	#my $listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-	#my $content = getpage($listURL, 0);
-	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
-	# <b>202</b>개 트랙백
-	#$content =~ m/<b>(\d+?)<\/b>개 트랙백/i;
 	my $trackback_all_num = $egloosinfo->{trackback_count};
 	my $pagenum = ($trackback_all_num / 50) + 1;
 	
@@ -1091,7 +1098,7 @@ sub get_all_trackback ($\@\%)
 		else
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://www.egloos.com/adm/post/chgtrb_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '??listcount=50';
 			$content = getpage($listURL, 0);
 			
 #			저장하기.
@@ -1101,7 +1108,7 @@ sub get_all_trackback ($\@\%)
 		}
 		
 #		trackback 별로 찾아서 저장
-		my @trackback_fields = split /<tr bgcolor=/, $content;
+		my @trackback_fields = split /<tr><td><input type="checkbox" /, $content;
 		shift @trackback_fields; # 처음 것 제거.
 		
 #		trackback 하나씩 가져오기.
@@ -1158,11 +1165,6 @@ sub get_all_comment ($\@\%)
 	my $content;
 	
 	# 페이지 개수 가져오기.
-	#my $listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
-	#my $content = getpage($listURL, 0);
-	#$content =~ m/<td width="540">(?:\d+?)\/(\d+?) Page<\/td>/i;
-	# <b>11802</b>개 덧글
-	#$content =~ m/<b>(\d+?)<\/b>개 덧글/i;
 	my $comment_all_num = $egloosinfo->{comment_count};
 	my $pagenum = ($comment_all_num / 50) + 1;
 	
@@ -1195,7 +1197,7 @@ sub get_all_comment ($\@\%)
 		else
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://www.egloos.com/adm/post/chgcmt_info.php?pagecount=50&eid=' . $egloosinfo->{eid}. '&pg=' . $i;
+			$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '??listcount=50';
 			$content = getpage($listURL, 0); # 개행 없이 저장.
 			
 #			저장하기.
@@ -1206,7 +1208,7 @@ sub get_all_comment ($\@\%)
 		
 		
 	#	comment 별로 찾아서 저장
-		my @comment_fields = split /<tr bgcolor=/m, $content;
+		my @comment_fields = split /<tr><td><input type="checkbox" /m, $content;
 		shift @comment_fields; # 처음 것 제거.
 		
 	#	post 하나씩 가져오기.
@@ -1242,7 +1244,6 @@ sub get_all_comment ($\@\%)
 		{
 			$j++;
 		}
-		
 		
 #		셋팅.
 		my $post_arr_index = $postid_index->{$start_ele_postid};
