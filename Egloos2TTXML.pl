@@ -312,6 +312,7 @@ my_print("엔터 혹은 Ctrl+C를 누르면 프로그램이 끝납니다.\n");
 #http://search.cpan.org/~cpb/Flickr-Upload/Upload.pm
 #http://www.perlmonks.org/?node_id=475869
 #http://www.nntp.perl.org/group/perl.beginners/2007/07/msg93550.html
+#http://kldp.org/node/109560
 
 # Perl 코드 종료를 알림.
 __END__
