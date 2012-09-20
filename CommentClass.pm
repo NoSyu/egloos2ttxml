@@ -39,8 +39,8 @@ sub new ($$$$\%\@)
 	# 다른 코드에서도 이런식으로 한 곳이 많다.
 	# 성능은 떨어지겠지만 코드 개발 및 읽기에 효율적이라 생각한다.
 	# 다만, ()의 경우 앞에 \을 붙여야 괄호로 인식한다.
-	my $needle1 = '<span style="font-size:11px;color:#929292;">\(답글\)</span>';
-	if($comment_field =~ m/$needle1/i)
+	my $needle1 = '<td class="sub"><a href="(?:.+?)" title="\[답글\]';
+	if($comment_field =~ m/$needle1/ig)
 	{
 		$is_root = 0; # 있으니까 답댓글.
 	}
@@ -50,8 +50,8 @@ sub new ($$$$\%\@)
 	}
 	
 #	비밀글 여부.
-	$needle1 = '<img src="http://md.egloos.com/img/eg/post_security.gif" width="13" height="16" align="texttop" alt="비공개" />';
-	if($comment_field =~ m/$needle1/i)
+	$needle1 = '<i class="secret">비밀글</i>';
+	if($comment_field =~ m/$needle1/ig)
 	{
 		$is_secret = 1; # 있으니까 비밀 댓글..
 	}
@@ -61,19 +61,17 @@ sub new ($$$$\%\@)
 	}
 	
 #	postid와 댓글 id 가져오기.
-	$needle1 = '<input type="checkbox"name="chk" value="';
-	$comment_field =~ m/$needle1(\d+?)-(.+?)"/i;
+	$comment_field =~ m/^name="chk" value="(\d+?)-(.+?)"/i;
 	$postid = $1;
 	$commentid = $2;
 	
 #	댓글 적은이 정보 가져오기.
 #	예제.
-#	<td width="100" align="center" class="black"><a href="http://NoSyu.egloos.com"  target="_new">NoSyu</a></td>
-#	<td width="100" align="center" class="black">뎅궁씨</td>
-	$comment_field =~ m/<td width="100" align="center" class="black">(.*?)<\/td>/i;
-	my $temp = $1;
+#	<td><a href="http://anngabriel.egloos.com" target="_blank" class="dot" title="타누키">타누키</a></td>
+#	<td><span class="dot" title="ㄷㄷㄷ">ㄷㄷㄷ</span></td>
+	
 #	댓글이의 주소가 없는 경우가 있음.
-	if($temp =~ m/<a href="(.*?)"  target="_new">(.*?)<\/a>/i)
+	if($comment_field =~ m/<td><a href="(.*?)" target="_blank" class="dot" title(?:[^>]+?)>(.*?)<\/a><\/td>/i)
 	{
 		$href = $1;
 		$who = $2;
@@ -90,10 +88,11 @@ sub new ($$$$\%\@)
 	else
 	{
 		# 댓글 주소가 없는 경우.
+		$comment_field =~ m/<td><span class="dot" title(?:[^>]+?)>(.+?)<\/span><\/td>/i;
+		
 		$href = '';
-		$who = $temp;
+		$who = $1;
 	}
-	
 	
 #	덧글이 적혀진 글의 페이지 가져오기. - 수정 2009.01.01
 #	댓글 하나마다 페이지에 접근하는 것이 아니라 PostClass를 만들 때 해당 페이지를 하드에 저장한다.
@@ -109,9 +108,9 @@ sub new ($$$$\%\@)
 #	예제.
 #	<td width="80" align="center" class="black">2009/01/06</td></tr>
 	my $content; # 해당 페이지
-	$comment_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;
-	my $temp_time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+#	$comment_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;
+#	my $temp_time = DateTime->new(year => $1, month  => $2, day => $3,
+#						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
 	
 #	24시간 안에 올라온 것이 아니기에 미리 저장한 곳에서 가져온다.
 #	이글루스가 임시 조치한 글의 경우 목록에 글이 없다.
@@ -134,9 +133,8 @@ sub new ($$$$\%\@)
 #		메뉴릿이라고 하는 것이 생겼는데 여기서 이런 일이 발생하고 있다.
 		my %open_close;
 		$open_close{post} = 'public';	# 메뉴릿이 더 많은 것이라 가정하자.
-		$open_close{comment} = 0;
-		$open_close{trackback} = 0;
-		$open_close{datetime_info} = '';
+		$open_close{trackback_cnt} = 0;
+		$open_close{category_info} = '미분류';
 		
 		my $filename = 'data/' . $postid . '/content.xml';
 		
@@ -144,7 +142,7 @@ sub new ($$$$\%\@)
 #		사실 이것 때문에 $egloosinfo을 가져와야한다.
 #		그 전에는 필요한 것만 가져왔다.
 #		중복되는 것을 제거하려고 하였으나 리팩토링이 귀찮아서 일단 이렇게 하였다.
-		my $the_post = PostClass->new($postid, $egloosinfo, 0, 0, %open_close );
+		my $the_post = PostClass->new($postid, $egloosinfo, -1, 0, %open_close);
 		
 #		에러가 발생할 때는 이 comment를 그냥 넘기자.
 #		넘기는 처리는 -1을 반환하는 것으로 하자.
@@ -191,6 +189,7 @@ sub new ($$$$\%\@)
 	}
 	
 # 남은 것은 description, time
+
 # 예제
 #<div class="con">
 #                        <span><a href="http://dongdm.egloos.com/m" target="_blank" class="nick">dongdm</a> <span>2010/01/16 13:57</span></span> 
@@ -220,26 +219,43 @@ sub new ($$$$\%\@)
 		#	있으니 가져오기	
 		$time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');	
-		$description = $6;
-		chomp($description);
+		if($description ne '')
+		{
+			$description = $6;
+			$description =~ s/^<font(?:[^>]+?)>//ig;
+			$description =~ s/<\/font>$//ig;
+			chomp($description);
+		}
+		
 	}
 	elsif($content =~ m/<span>(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
 	{
 		# 올해의 것
 		$time = DateTime->new(year => DateTime->now()->year(), month  => $1, day => $2,
-						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');	
-		$description = $5;
-		chomp($description);
+						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
+		if($description ne '')
+		{
+			$description = $5;
+			$description =~ s/^<font(?:[^>]+?)>//ig;
+			$description =~ s/<\/font>$//ig;
+			chomp($description);
+		}	
 	}
 	else
 	{
 		# 본문에 얻기 힘드니 관리 페이지에서 가져오자.
-		$comment_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;
+		$comment_field =~ m/<td>(\d{4})-(\d{2})-(\d{2})<\/td><\/tr>/i;
 		$time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
-						
-		$comment_field =~ m/<td width="395" class="black"><a href="[^"]+" title="(.*?)" target="_new">(?:.*?)<\/a>/i;
-		$description = $1;
+		
+		if($comment_field =~ m/<td class="sub"><a href="(?:.+?)" title="(.+?)" target="_blank">/is)
+		{
+			$description = $1;
+			$description =~ s/^\[답글\]//ig;
+			$description =~ s/^\[비밀댓글\]//ig;
+			chomp($description);
+		}
+	
 		if(0 == $all_post->[$postid_index->{$postid}]->{is_menu_page})
 		{
 			BackUpEgloos_Subs::my_print("댓글 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $commentid . "\n");

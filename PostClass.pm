@@ -52,7 +52,7 @@ sub new ($$$\%%)
 	my $self;
 	
 #	이글루스에서 접근하여 새롭게 만들기.
-	if(0 == $new_type)
+	if($new_type <= 0)
 	{
 #		파일 카운트 변수 초기화.
 		$file_count = 0;
@@ -60,6 +60,22 @@ sub new ($$$\%%)
 #		글 정보 얻기.
 		# 웹페이지의 자료를 가져옴. 모바일 페이지의 것을 가져옴.
 		my $content_html = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/' . $postid, 0);
+		
+		# 메뉴릿 처리
+		if(-1 == $new_type)
+		{
+			#$open_close{datetime_info} = $1;
+			if($content_html =~ m/<div class="subject"><h3>(.+?)<\/h3>/i)
+			{
+				$open_close{post_title} = $1;
+				chomp($open_close{post_title});
+			}
+			
+			if($content_html =~ m/<div class="reply"><a href(?:[^>]+?)>덧글 <span>(.+?)<\/span>/i)
+			{
+				$open_close{comment_cnt} = $1;
+			}
+		}
 		
 		# 변수 할당		
 		#$title = BackUpEgloos_Subs::findstr($content_html, '<div class="subject"><h3>(?:<img[^>]*> )?', '</h3>');

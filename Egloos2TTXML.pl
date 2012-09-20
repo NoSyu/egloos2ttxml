@@ -69,7 +69,7 @@ my $is_use_mobile;
 while(1)
 {
 	my_print("그림 파일은 어느 곳에서 가져올까요?\n");
-	my_print("0. 모바일 페이지\n1. 메인 페이지\n> ");
+	my_print("0. 모바일 페이지(추천)\n1. 메인 페이지\n> ");
 	$is_use_mobile = <STDIN>;
 	chomp($is_use_mobile);
 	
@@ -155,7 +155,8 @@ my $number;
 while(1)
 {
 	my_print("어떤 작업을 하시겠습니까?\n");
-	my_print("1. 이글루스 글, 트랙백, 댓글 다운로드\n2. 자료 불러온 후 TTXML 파일 만들기.\n3. 포토로그 사진 백업.\n> ");
+	#my_print("1. 이글루스 글, 트랙백, 댓글 다운로드\n2. 자료 불러온 후 TTXML 파일 만들기.\n3. 포토로그 사진 백업.\n> ");
+	my_print("1. 이글루스 글, 트랙백, 댓글 다운로드\n2. 자료 불러온 후 TTXML 파일 만들기.\n> ");
 	$number = <STDIN>;
 	chomp($number);
 	if('1' eq $number)
@@ -252,14 +253,14 @@ while(1)
 		# 사용자의 입력을 받기 위해 만든 무한루프 빠져나가기. <- 처음 while(1)을 빠져나감.
 		last;
 	}
-	elsif('3' eq $number)
-	{
-		# 포토로그 백업.
-		BackupPhotolog($egloosinfo->{eid});
-		
-		# 사용자의 입력을 받기 위해 만든 무한루프 빠져나가기.
-		last;
-	}
+#	elsif('3' eq $number)
+#	{
+#		# 포토로그 백업.
+#		BackupPhotolog($egloosinfo->{eid});
+#		
+#		# 사용자의 입력을 받기 위해 만든 무한루프 빠져나가기.
+#		last;
+#	}
 #	elsif('4' eq $number)
 #	{
 #		# 모바일 페이지로 작업한다.
@@ -281,7 +282,8 @@ while(1)
 	else
 	{
 		# 1번과 2번이 아닌 다른 입력이 들어왔기에 얘기한다.
-		my_print("1, 2, 3, 4 중 하나를 입력해주세요.\n\n");
+		#my_print("1, 2, 3, 4 중 하나를 입력해주세요.\n\n");
+		my_print("1, 2 중 하나를 입력해주세요.\n\n");
 	}
 }
 

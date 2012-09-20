@@ -34,8 +34,8 @@ sub new ($$$$$\%\@)
 	$trackback_field =~ m/<\/td><td>(?:[0-9]+?)<\/td><td class="sub"><a href="[^"]+" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td><td class="sub"><a href="([^"]+)" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td>/i;
 	$description = $1;
 	$href = $2;
-	$blog_title = $3;
-			$post_title = 1;		# 이것 처리해야 함
+	$post_title = $3;
+	$blog_title = $post_title;		# 이것을 알려면 해당 주소에 접근해야 하기에 일이 많아진다. 따라서 post_title과 동일시한다.
 	
 #	트랙백이 적혀진 글의 페이지 가져오기. - 수정 2009.01.11
 #	트랙백이 프로그램이 시작하는 오늘 적혔다면 다시 읽어오기. - 2009-1-13

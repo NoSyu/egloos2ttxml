@@ -820,7 +820,7 @@ sub get_all_list ($)
 	$i = 1;
 	
 	# 페이지 개수 가져오기.
-	my $listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '??listcount=50';
+	my $listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '?listcount=50';
 	my $content = getpage($listURL, 0);
 	my $pagenum = ($egloosinfo->{trackback_count} / 50) + 1;
 	
@@ -839,7 +839,7 @@ sub get_all_list ($)
 		if(!(-e $filename))
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '??listcount=50';
+			$listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '?listcount=50';
 			$content = getpage($listURL, 0);
 			
 #			저장하기.
@@ -854,7 +854,7 @@ sub get_all_list ($)
 	$i = 1;
 	
 	# 페이지 개수 가져오기.
-	$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '??listcount=50';
+	$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '?listcount=50';
 	$content = getpage($listURL, 0);
 	$pagenum = ($egloosinfo->{comment_count} / 50) + 1;
 	
@@ -873,7 +873,7 @@ sub get_all_list ($)
 		if(!(-e $filename))
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '??listcount=50';
+			$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '?listcount=50';
 			$content = getpage($listURL, 0); # 개행 없이 저장.
 			
 #			저장하기.
@@ -1078,7 +1078,7 @@ sub get_all_trackback ($\@\%)
 		else
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '??listcount=50';
+			$listURL = 'http://admin.egloos.com/contents/blog/trackback/page/' . $i . '?listcount=50';
 			$content = getpage($listURL, 0);
 			
 #			저장하기.
@@ -1177,7 +1177,7 @@ sub get_all_comment ($\@\%)
 		else
 		{
 #			파일이 없기에 가져와서 저장하기.
-			$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '??listcount=50';
+			$listURL = 'http://admin.egloos.com/contents/blog/comment/page/' . $i . '?listcount=50';
 			$content = getpage($listURL, 0); # 개행 없이 저장.
 			
 #			저장하기.
