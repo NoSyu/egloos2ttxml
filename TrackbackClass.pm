@@ -23,22 +23,19 @@ sub new ($$$$$\%\@)
 	my ($egloosinfo, $blogurl, $trackback_field, $newblogurl, $dt_today,  $postid_index, $all_post) = @_;
 
 #	postid와 trackbackid를 가져오기.	
-	my $start_needle = '<input type="checkbox" name="chk" value="';
+	my $start_needle = 'name="chk" value="';
 	$trackback_field =~ m/$start_needle(\d+?)-(\d+?)"/i;
 	$postid = $1;
 	$trackbackid = $2;
 
-#	관리 페이지에서 트랙백 보낸 곳의 정보 가져오기
-	$start_needle = '<td width="160" align="center" class="black"><a href="';
-	$trackback_field =~ m/$start_needle(.+?)"[^>]+>(.+?)<\/a>/i;
-	$href = $1;
-	$blog_title = $2;
-	
+#	관리 페이지에서 트랙백 보낸 곳의 정보 가져오기 및 다른 것들 포함
 #	예제.
-#	<td width="435" class="black"><a href="http://NoSyu.egloos.com/4631722"  title="??개인정보에 대한 이야기는 어제 오늘의 이야기가 아니죠..지금 한국정보보호진흥원(이하 'KISA)에서 개인정보 클린 캠페인을 9.24~10.24일까지 한달간 하고 있습니다. 본 블로거도 정보보호에 관심 있는 만큼 참여 해 보기로 하였습니다. 혹시, 어렵다고 하시는 분들을 위하여 하나씩 소개해 드리겠습니다. ?1. 개인정보 클린 캠페인 홈페이지를 방문한다. http://p-clean.kisa.or.kr/ 홈페이지를 방문하면 아래와 같은 홍보와 ..." target="_new">개인정보 클린 캠페인 참여해 보니 - 대부분 게임싸이트더라</a></td>
-	$trackback_field =~ m/<td width="435" class="black"><a href="[^"]+"  title="(.*?)" target="_new">(.*?)<\/a><\/td>/i;
+#	name="chk" value="2500689-628128" /></td><td>3</td><td class="sub"><a href="http://dongdm.egloos.com/2500689" title="좋다!!!!! ㄱㄱㄱㄱㄱㄱㄱㄱㄱ" target="_blank">좋다!!!!! ㄱㄱㄱㄱㄱㄱㄱㄱㄱ</a></td><td class="sub"><a href="http://nosyu.tistory.com/10" title="NoSyu's Blog : 비밀글!!!!!!!" target="_blank">NoSyu's Blog : 비밀글!!!!!!!</a></td><td>2011-01-02</td></tr>
+	$trackback_field =~ m/<\/td><td>(?:[0-9]+?)<\/td><td class="sub"><a href="[^"]+" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td><td class="sub"><a href="([^"]+)" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td>/i;
 	$description = $1;
-	$post_title = $2;
+	$href = $2;
+	$blog_title = $3;
+			$post_title = 1;		# 이것 처리해야 함
 	
 #	트랙백이 적혀진 글의 페이지 가져오기. - 수정 2009.01.11
 #	트랙백이 프로그램이 시작하는 오늘 적혔다면 다시 읽어오기. - 2009-1-13
@@ -78,7 +75,9 @@ sub new ($$$$$\%\@)
 		open(OUT, ">>:encoding(utf8) " , 'Egloos_blind.txt') or die $!;
 		print OUT $postid . ' : ' .$the_post->{title} . "\n\n";
 		close(OUT);
-	}	
+	}
+	
+									# 이 밑으로 처리해야 함
 
 #	time이 해결되지 않았음. 그래서 본문에서 가져와야 함.
 #	<div class="trackback_list">

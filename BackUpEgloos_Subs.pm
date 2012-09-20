@@ -923,7 +923,7 @@ sub get_all_post ($\%)
 #			파일이 없기에 가져와서 저장하기.
 #			http://admin.egloos.com/contents/blog/post/page/1?date=&category=&listcount=50&kwd=
 			# 이글루스 개편으로 인한 주소 수정 - NoSyu, 2012.08.07
-			my $postlistURL = 'admin.egloos.com/contents/blog/post/page/' . $i . '?date=&category=&listcount=50&kwd=';
+			my $postlistURL = 'http://admin.egloos.com/contents/blog/post/page/' . $i . '?date=&category=&listcount=50&kwd=';
 			$content = getpage($postlistURL, 0);
 			
 #			저장하기.
@@ -945,59 +945,39 @@ sub get_all_post ($\%)
 #		post 하나씩 가져오기.
 		for my $post_field (@post_fields)
 		{
-			my $start_needle = "<td class=\"sub\"><a href=\"" . $egloosinfo->{blogurl} . '/';
+			my %open_close; # 글의 공개여부.
+
+#			글 공개여부.
+			my $start_needle = "<i class=\"secret\">비밀글</i>";
+			if($post_field =~ m/$start_needle/i)
+			{
+				$open_close{post} = 'private';
+				$start_needle = "<td class=\"sub\"><i class=\"secret\">비밀글</i><a href=\"" . $egloosinfo->{blogurl} . '/';
+			}
+			else
+			{
+				$open_close{post} = 'public';
+				$start_needle = "<td class=\"sub\"><a href=\"" . $egloosinfo->{blogurl} . '/';
+			}
+
 			my $postid = findstr($post_field, $start_needle, '"');
 #			postid를 제대로 찾았다면 나머지 것도 얻는다.
 			if(-1 != $postid)
 			{
-				my %open_close; # 글의 공개여부.
-				
-#				글 공개여부.
-				$start_needle = '<i class="secret">비밀글</i>';
-				if($post_field =~ m/$start_needle/i)
-				{
-					$open_close{post} = 'private';
-				}
-				else
-				{
-					$open_close{post} = 'public';
-				}
 				# 덧글과 트랙백의 공개 여부는 이제 더 이상 여기에서 알 수 없다.
-				# 모바일 환경이라면 다음과 같은 방법이 가능하다.
-				# 댓글 : 댓글창에 '이 포스트는 더 이상 덧글을 남길 수 없습니다.' 라는 말이 뜬다.
-				# 트랙백 : 글에 관련글 이라는 표시가 뜨지 않는다.
-##				덧글 공개여부
-#				$start_needle = '<td width="45" align="center" class="red">x</td>';
-#				if($post_field =~ m/$start_needle/i)
-#				{
-#					$open_close{comment} = 0;
-#				}
-#				else
-#				{
-#					$open_close{comment} = 1;
-#				}
-##				트랙백 공개여부.
-#				$start_needle = '<td width="50" align="center" class="red">x</td>';
-#				if($post_field =~ m/$start_needle/i)
-#				{
-#					$open_close{trackback} = 0;
-#				}
-#				else
-#				{
-#					$open_close{trackback} = 1;
-#				}
 
 #				시간 정보 - 1시간 전이라는 식으로 나와있는 경우가 있기에....
 #				댓글과 트랙백의 개수도 여기에 적습니다.
 #				카테고리도 포함
 #				예제
 #				<td>2012-01-09</td><td title="미분류">미분류</td><td>8</td><td>0</td><td>0</td></tr>
-				if($post_field =~ m/<td>(.+?)<\/td><td(?:[^>]+?)>(.+?)<\/td><td>([0-9]+?)<\/td><td>([0-9]+?)<\/td><td>(?:[0-9]+?)<\/td><\/tr>/ig)
+				if($post_field =~ m/<td>(.+?)<\/td><td(?:[^>]+?)>(?:<i class="secret">비밀글<\/i>)?<a(?:[^>]+?)>(.+?)<\/a><\/td><td>(?:.+?)<\/td><td(?:[^>]+?)>(.+?)<\/td><td>([0-9]+?)<\/td><td>([0-9]+?)<\/td><td>(?:[0-9]+?)<\/td><\/tr>/ig)
 				{
 					$open_close{datetime_info} = $1;
-					$open_close{category_info} = $2;
-					$open_close{comment_cnt} = $3;
-					$open_close{trackback_cnt} = $4;
+					$open_close{post_title} = $2;
+					$open_close{category_info} = $3;
+					$open_close{comment_cnt} = $4;
+					$open_close{trackback_cnt} = $5;
 				}
 				
 #				파일이 존재하면 불러오고 없으면 새로 만들기. - 2009-01-11

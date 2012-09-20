@@ -62,17 +62,11 @@ sub new ($$$\%%)
 		my $content_html = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/' . $postid, 0);
 		
 		# 변수 할당		
-		$title = BackUpEgloos_Subs::findstr($content_html, '<div class="subject"><h3>(?:<img[^>]*> )?', '</h3>');
+		#$title = BackUpEgloos_Subs::findstr($content_html, '<div class="subject"><h3>(?:<img[^>]*> )?', '</h3>');
+		$title = $open_close{post_title};
 		$link = $egloosinfo->{blogurl} . '/' . $postid;
 		$description = BackUpEgloos_Subs::findstr($content_html, '<!-- 2011.05 개선 //-->', '<div class="wrap_tag">');
-		if($content_html =~ m/<span class="cate"><a [^>]+>(.*?)<\/a>/ig)
-		{
-			$category = $1;
-		}
-		else
-		{
-			$category = '미분류';
-		}
+		$category = $open_close{category_info};
 		# <span class="name">dongdm</span> 2010/12/30 23:41                </p>
 		# <span class="name">dongdm</span> 1시간전                </p>
 		# 이런 것도 있기에 난감. 그냥 저런 건 00:00으로 처리한다.
@@ -104,7 +98,7 @@ sub new ($$$\%%)
 					$time = DateTime->now(time_zone => 'Asia/Seoul');
 					BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근이며 이글루 관리 글 목록에 없습니다.\n그렇기에 글이 적힌 시각을 현재 시각으로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
 				}
-			}			
+			}
 		}
 		else
 		{
@@ -115,47 +109,41 @@ sub new ($$$\%%)
 
 #		글 공개여부.
 		$visibility = $open_close{post};
-#		트랙백, 댓글 공개여부. 
-		$acceptComment = $open_close{comment};
-		$acceptTrackback = $open_close{trackback};
-#		트랙백, 댓글 개수
-		if(0 == $acceptComment)
+#		댓글 : 댓글창에 '이 포스트는 더 이상 덧글을 남길 수 없습니다.' 라는 말이 뜬다.
+#		트랙백 : 현재 방법을 찾지 못했다.
+#		트랙백 공개여부.
+#		my $target_needle = '<a href="/m/trackback/' + $postid + '">관련글 <span>';
+#		if($post_field =~ m/$target_needle/i)
+#		{
+#			$acceptTrackback = 1;
+#		}
+#		else
+#		{
+#			$acceptTrackback = 0;
+#		}
+
+#		덧글 공개여부
+		my $comment_content_html = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/comment/' . $postid, 0);
+		my $target_needle = '<div class="reply_write">                ※ 이 포스트는 더 이상 덧글을 남길 수 없습니다.                </div>';
+		if($comment_content_html =~ m/$target_needle/i)
 		{
-			# 댓글을 더 이상 쓸 수 없기에 관리 페이지에 나오지 않음.
-			$comment_count = 0;	# 기본적으로 0
-			# 그리고 찾음.
-			# 이렇게 하는 이유는 댓글이 0인 경우 해당 글에서 댓글 개수를 아예 보여주지 않음.
-			# 예제
-			# <div class="reply"><a href="/m/comment/2500689">덧글 <span> 17</span></a><span class="line">&nbsp;</span> <a href="/m/trackback/2500689">관련글 <span>3</span></a>                </div>            </div>
-			if($content_html =~ m/<div class="reply"><a[^>]*?>덧글 <span> ([0-9]+?)<\/span>/ig)
-			{
-				# 찾았기에 찾은 내용물을 반환.
-				$comment_count = $1;
-			}
+			$acceptComment = 0;
 		}
 		else
 		{
-			$comment_count = $open_close{comment_cnt};
+			$acceptComment = 1;
+		}
+
+#		비밀글이라면 둘 다 막아야지
+		if('private' eq $visibility)
+		{
+			$acceptTrackback = 0;
+			$acceptComment = 0;
 		}
 		
-		if(0 == $acceptTrackback)
-		{
-			# 트랙백을 더 이상 쓸 수 없기에 관리 페이지에 나오지 않음.
-			$trackback_count = 0;	# 기본적으로 0
-			# 그리고 찾음.
-			# 이렇게 하는 이유는 댓글이 0인 경우 해당 글에서 댓글 개수를 아예 보여주지 않음.
-			# 예제
-			# <div class="reply"><a href="/m/comment/2500689">덧글 <span> 17</span></a><span class="line">&nbsp;</span> <a href="/m/trackback/2500689">관련글 <span>3</span></a>                </div>            </div>
-			if($content_html =~ m/<a href="\/m\/trackback\/$postid">관련글 <span>([0-9]+?)<\/span>/ig)
-			{
-				# 찾았기에 찾은 내용물을 반환.
-				$trackback_count = $1;
-			}
-		}
-		else
-		{
-			$trackback_count = $open_close{trackback_cnt};
-		}
+#		트랙백, 댓글 개수
+		$comment_count = $open_close{comment_cnt};
+		$trackback_count = $open_close{trackback_cnt};
 		
 #		postid로 디렉토리 만들기. - 있는 경우 처리.
 		if(!(-e './data/' . $postid))
