@@ -7,6 +7,7 @@ use strict;
 use Carp;
 use WWW::Mechanize; # 웹페이지에 접근하는 아주 훌륭한 라이브러리.
 use utf8; # 이글루스 정보들은 encoding으로 utf8으로 되어있기에 사용.
+use LWP::Protocol::https;	# 로그인할 때 https를 쓴다. 따라서 이것이 설치되어 있어야 한다.
 
 $EgloosInfo::mech = WWW::Mechanize->new(autocheck => 0);	# mesh 인자, autocheck를 0으로 설정하여 이 기능을 껐음. 따라서 에러가 발생해도 die로 죽지 않고, warning으로 내가 처리할 수 있게 되었다.
 #$EgloosInfo::is_use_mobile = 0;
@@ -91,8 +92,8 @@ sub getBlogInfo
 	my $egloosurl = 'http://www.egloos.com';
 	
 #	needle 즉, 찾을 문자열의 앞뒤를 설정
-#	예제 : <a href="http://dongdm.egloos.com/" title="내 이글루 가기" onclick="statClick('egsm1','RLA16');">내이글루</a>
-	my $needle1 = '<a href="'; # 이글루 주소
+#	예제 : <a class="myegloo"  href="http://dongdm.egloos.com/" title="내 이글루 가기" onclick="statClick('egsm1','RLA16');">내이글루</a>
+	my $needle1 = '<a class="myegloo"  href="'; # 이글루 주소
 #	예제 : <a href="http://www.egloos.com/egloo/insert.php?eid=f0012026">New Post</a>
 	#my $needle2 = '<a href="http://www.egloos.com/adm/chgadm_main.php\?eid='; # 첫 페이지에서 숨겨진 아이디를 찾는 needle - ?가 들어가면 제대로 못 찾는다.
 	my $needle2 = "'eglooid' : '"; # 이글루스가 개편하였기에 새롭게 찾아낸다. - NoSyu, 2012.08.07
@@ -105,7 +106,7 @@ sub getBlogInfo
 	my $result = BackUpEgloos_Subs::getpage($egloosurl, 0);
 
 	# 블로그 주소를 가져온다.
-	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '"[^>]+>내이글루');
+	$blogurl = BackUpEgloos_Subs::findstr($result, $needle1, '/?" title="내 이글루 가기"');
 	
 #	블로그 제목 가져오기.
 #	예제.
@@ -121,7 +122,7 @@ sub getBlogInfo
 	$author = $1;
 	
 # 블로그의 eid를 가져온다.
-		$eid = BackUpEgloos_Subs::findstr($result, $needle2, "'");
+	$eid = BackUpEgloos_Subs::findstr($result, $needle2, "'");
 		
 	my $adminURL = 'http://admin.egloos.com/';
 	
@@ -156,11 +157,11 @@ sub getApiInfo
 	#s/[\n\r\t]//g;
 	
 	# 블로그의 APIURL을 가져온다.
-		$apiurl = BackUpEgloos_Subs::findstr($result, $needle1, '</td>');
+	$apiurl = BackUpEgloos_Subs::findstr($result, $needle1, '</td>');
 	
 	# 블로그의 APIKey을 가져온다.
 	# APIKey 재발급이라는 것이 나타나고 조금 변화가 되어 제대로 작동하지 않았음 - 20090128
-		$apikey = BackUpEgloos_Subs::findstr($result, $needle2, ' <span class="btns">');
+	$apikey = BackUpEgloos_Subs::findstr($result, $needle2, ' <span class="btns">');
 }
 
 # 이제 작업하지 않기에 주석 처리.

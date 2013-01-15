@@ -82,6 +82,7 @@ sub new ($$$\%%)
 		$title = $open_close{post_title};
 		$link = $egloosinfo->{blogurl} . '/' . $postid;
 		$description = BackUpEgloos_Subs::findstr($content_html, '<!-- 2011.05 개선 //-->', '<div class="wrap_tag">');
+		chomp($description);
 		$category = $open_close{category_info};
 		# <span class="name">dongdm</span> 2010/12/30 23:41                </p>
 		# <span class="name">dongdm</span> 1시간전                </p>
@@ -451,6 +452,73 @@ sub changeimgsrc_m($$)
 		}
 	} # end of  foreach my $img_elem (@img_elems)
 	
+	# 본문 안의 이미지 다운로드 - 이글루스에 올려진 것들이 아닌 것들도 다운로드해야 함
+	$description = $ori_post_html;
+	while($description =~ m/<img((?:.*?)src="(http:\/\/[[:alnum:][:punct:]^>^<^"^']+\.(jpg|png|gif|jpeg))"[^>]*)>/igc)
+	{
+#		예제.
+#		http://pds12.egloos.com/pds/200812/29/60/c0049460_495826383bef7.png
+#		$img_url = http://pds12.egloos.com/pds/200812/29/60/c0049460_495826383bef7.png
+#		$img_extension = png
+		my $img_info_html = $1; # 그림 정보.
+		my $img_url = $2; # 그림 url
+		my $img_extension = $3; # 그림 파일 확장자
+		my $width; # 그림 넓이.
+		my $height; # 그림 높이.
+		my $alt; # 그림 설명.
+		
+#		width, height, alt 추출.
+#		없을 경우 ''으로 처리.
+		if($img_info_html =~ m/width="(.+?)"/i)
+		{
+			$width = $1;
+		}
+		else
+		{
+			$width = '';
+		}
+		if($img_info_html =~ m/height="(.+?)"/i)
+		{
+			$height = $1;
+		}
+		else
+		{
+			$height = '';
+		}
+		if($img_info_html =~ m/alt="(.*?)"/i)
+		{
+			$alt = $1;
+		}
+		else
+		{
+			$alt = '';
+		}
+		
+#		이미지 저장할 경로 설정.
+		my $istr = BackUpEgloos_Subs::numtonumstr($i);
+		my $img_dest = 'data/' . $postid . '/' . $istr . '.' . $img_extension;
+#		다운로드.
+		if(-1 == BackUpEgloos_Subs::downImage($img_url, $img_dest, 0))
+		{
+#			에러가 발생한 것임.
+#			2009.1.22
+			BackUpEgloos_Subs::print_txt('이미지 다운로드 에러 : ' . $img_url . ' 글 : ' . $postid . "\n하지만 프로그램은 계속 진행됩니다.");
+		}
+		else
+		{
+			# 문제 없기에 본문 안의 내용 바꾸기.
+			# 페이지 안의 주소 수정
+	#		XML 파일에 적기위해 치환자 설정.
+	#		예제.
+	#		[##_1C|1044461297.png|width="490" height="88.1072555205" alt=""| _##]
+			my $img_info = 'width="' . $width .
+							'" height="' . $height .
+							'" alt="' . $alt . '"';
+			$img_dest = '[##_1C|' . $istr . '.' . $img_extension . '|' . $img_info . '| _##]'; # TTXML에 맞게 이름 설정.
+			$ori_post_html =~ s/<img(?:.*?)src="$img_url"[^>]*>/$img_dest/ig; # 이름 바꾸기.
+			$i++; # 파일명을 하나 증가.
+		}
+	} # end of  foreach my $img_elem (@img_elems)
 	$file_count = $i-1; # 파일 개수 지정.
 	return $ori_post_html; # 이미지 주소를 바꾼 본문 내용을 반환.
 }

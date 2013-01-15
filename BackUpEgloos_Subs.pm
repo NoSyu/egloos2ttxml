@@ -56,7 +56,7 @@ sub downImage ($$$);
 sub print_txt ($);
 
 # 로그인 함수.
-# 실제로 EgloosInfo에서만 처음에 호출되는 함수이기에 거기에 만들어서 사용하는 것이 좋으나, 전역변수로서 $EgloosInfo::mech가 제대로 작동하는지 확인하고자 여기에 만들었고, 잘 작동하시에 리팩토링을 하지 않고 그대로 사용하게 되었음.
+# 실제로 EgloosInfo에서만 처음에 호출되는 함수이기에 거기에 만들어서 사용하는 것이 좋으나, 전역변수로서 $EgloosInfo::mech가 제대로 작동하는지 확인하고자 여기에 만들었고, 잘 작동하기에 리팩토링을 하지 않고 그대로 사용하게 되었음.
 # EgloosInfo 패키지에 넣고 싶다면 언제라도 넣어도 되는 함수.
 sub login_egloos ($$)
 {
@@ -77,7 +77,7 @@ sub login_egloos ($$)
 #		userpwd => $pw},
 #	button => 'lbtn');
 	$EgloosInfo::mech->submit_form(
-	form_name => "authform",
+	form_id => "authform",
 	fields => {
 		userid => $id, 
 		userpwd => $pw},
