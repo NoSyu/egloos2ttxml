@@ -1388,79 +1388,205 @@ sub write_post_xml ($$)
 #	file_count, start_trackbacks, end_trackbacks,
 #	start_comments, end_comments, content_html
 
-	$xml_writer->startTag("postid");
-	$xml_writer->characters($the_post->{postid});
-	$xml_writer->endTag("postid");
+	if (defined $the_post->{postid})
+	{
+		$xml_writer->startTag("postid");
+		$xml_writer->characters($the_post->{postid});
+		$xml_writer->endTag("postid");
+	}
+	else
+	{
+		my_print("Error: postid");
+	}
 	
-	$xml_writer->startTag("description");
-	$xml_writer->cdata($the_post->{description});
-	$xml_writer->endTag("description");
+	if (defined $the_post->{description})
+	{
+		$xml_writer->startTag("description");
+		$xml_writer->cdata($the_post->{description});
+		$xml_writer->endTag("description");
+	}
+	else
+	{
+		my_print("Error: description");
+	}
 	
-	$xml_writer->startTag("time");
-	$xml_writer->characters($the_post->{time});
-	$xml_writer->endTag("time");
+	if (defined $the_post->{time})
+	{
+		$xml_writer->startTag("time");
+		$xml_writer->characters($the_post->{time});
+		$xml_writer->endTag("time");
+	}
+	else
+	{
+		my_print("Error: time");
+	}
 	
-	$xml_writer->startTag("title");
-	$xml_writer->characters($the_post->{title});
-	$xml_writer->endTag("title");
+	if (defined $the_post->{title})
+	{
+		$xml_writer->startTag("title");
+		$xml_writer->characters($the_post->{title});
+		$xml_writer->endTag("title");
+	}
+	else
+	{
+		my_print("Error: title");
+	}
 	
-	$xml_writer->startTag("link");
-	$xml_writer->characters($the_post->{link});
-	$xml_writer->endTag("link");
+	if (defined $the_post->{link})
+	{
+		$xml_writer->startTag("link");
+		$xml_writer->characters($the_post->{link});
+		$xml_writer->endTag("link");
+	}
+	else
+	{
+		my_print("Error: link");
+	}
 	
-	$xml_writer->startTag("category");
-	$xml_writer->characters($the_post->{category});
-	$xml_writer->endTag("category");
+	if (defined $the_post->{category})
+	{
+		$xml_writer->startTag("category");
+		$xml_writer->characters($the_post->{category});
+		$xml_writer->endTag("category");
+	}
+	else
+	{
+		my_print("Error: category");
+	}
+
+	if (defined $the_post->{visibility})
+	{
+		$xml_writer->startTag("visibility");
+		$xml_writer->characters($the_post->{visibility});
+		$xml_writer->endTag("visibility");
+	}
+	else
+	{
+		my_print("Error: visibility");
+	}
 	
-	$xml_writer->startTag("visibility");
-	$xml_writer->characters($the_post->{visibility});
-	$xml_writer->endTag("visibility");
+	if (defined $the_post->{acceptComment})
+	{
+		$xml_writer->startTag("acceptComment");
+		$xml_writer->characters($the_post->{acceptComment});
+		$xml_writer->endTag("acceptComment");
+	}
+	else
+	{
+		my_print("Error: acceptComment");
+	}
 	
-	$xml_writer->startTag("acceptComment");
-	$xml_writer->characters($the_post->{acceptComment});
-	$xml_writer->endTag("acceptComment");
+	if (defined $the_post->{acceptTrackback})
+	{
+		$xml_writer->startTag("acceptTrackback");
+		$xml_writer->characters($the_post->{acceptTrackback});
+		$xml_writer->endTag("acceptTrackback");
+	}
+	else
+	{
+		my_print("Error: acceptTrackback");
+	}
 	
-	$xml_writer->startTag("acceptTrackback");
-	$xml_writer->characters($the_post->{acceptTrackback});
-	$xml_writer->endTag("acceptTrackback");
+	if (defined $the_post->{file_count})
+	{
+		$xml_writer->startTag("file_count");
+		$xml_writer->characters($the_post->{file_count});
+		$xml_writer->endTag("file_count");
+	}
+	else
+	{
+		my_print("Error: file_count");
+	}
 	
-	$xml_writer->startTag("file_count");
-	$xml_writer->characters($the_post->{file_count});
-	$xml_writer->endTag("file_count");
+	if (defined $the_post->{start_trackbacks})
+	{
+		$xml_writer->startTag("start_trackbacks");
+		$xml_writer->characters($the_post->{start_trackbacks});
+		$xml_writer->endTag("start_trackbacks");
+	}
+	else
+	{
+		my_print("Error: start_trackbacks");
+	}
 	
-	$xml_writer->startTag("start_trackbacks");
-	$xml_writer->characters($the_post->{start_trackbacks});
-	$xml_writer->endTag("start_trackbacks");
+	if (defined $the_post->{end_trackbacks})
+	{
+		$xml_writer->startTag("end_trackbacks");
+		$xml_writer->characters($the_post->{end_trackbacks});
+		$xml_writer->endTag("end_trackbacks");
+	}
+	else
+	{
+		my_print("Error: end_trackbacks");
+	}
 	
-	$xml_writer->startTag("end_trackbacks");
-	$xml_writer->characters($the_post->{end_trackbacks});
-	$xml_writer->endTag("end_trackbacks");
+	if (defined $the_post->{start_comments})
+	{
+		$xml_writer->startTag("start_comments");
+		$xml_writer->characters($the_post->{start_comments});
+		$xml_writer->endTag("start_comments");
+	}
+	else
+	{
+		my_print("Error: start_comments");
+	}
 	
-	$xml_writer->startTag("start_comments");
-	$xml_writer->characters($the_post->{start_comments});
-	$xml_writer->endTag("start_comments");
+	if (defined $the_post->{end_comments})
+	{
+		$xml_writer->startTag("end_comments");
+		$xml_writer->characters($the_post->{end_comments});
+		$xml_writer->endTag("end_comments");
+	}
+	else
+	{
+		my_print("Error: end_comments");
+	}
 	
-	$xml_writer->startTag("end_comments");
-	$xml_writer->characters($the_post->{end_comments});
-	$xml_writer->endTag("end_comments");
+	if (defined $the_post->{trackback_count})
+	{
+		$xml_writer->startTag("trackback_count");
+		$xml_writer->characters($the_post->{trackback_count});
+		$xml_writer->endTag("trackback_count");
+	}
+	else
+	{
+		my_print("Error: trackback_count");
+	}
 	
-	$xml_writer->startTag("trackback_count");
-	$xml_writer->characters($the_post->{trackback_count});
-	$xml_writer->endTag("trackback_count");
+	if (defined $the_post->{comment_count})
+	{
+		$xml_writer->startTag("comment_count");
+		$xml_writer->characters($the_post->{comment_count});
+		$xml_writer->endTag("comment_count");
+	}
+	else
+	{
+		my_print("Error: comment_count");
+	}
 	
-	$xml_writer->startTag("comment_count");
-	$xml_writer->characters($the_post->{comment_count});
-	$xml_writer->endTag("comment_count");
+	if (defined $the_post->{is_menu_page})
+	{
+		$xml_writer->startTag("is_menu_page");
+		$xml_writer->characters($the_post->{is_menu_page});
+		$xml_writer->endTag("is_menu_page");
+	}
+	else
+	{
+		my_print("Error: is_menu_page");
+	}
 	
-	$xml_writer->startTag("is_menu_page");
-	$xml_writer->characters($the_post->{is_menu_page});
-	$xml_writer->endTag("is_menu_page");
-	
-	$xml_writer->startTag("content_html");
-#	에러 발생 - 2009.1.12 - 이유는 유니코드 때문인 듯...
-#	확인하니 그 문자는 xml에 담을 수 없다고 나옴. 그래서 지우라고 함.;;;
-	$xml_writer->cdata($the_post->{content_html});
-	$xml_writer->endTag("content_html");
+	if (defined $the_post->{content_html})
+	{
+		$xml_writer->startTag("content_html");
+	#	에러 발생 - 2009.1.12 - 이유는 유니코드 때문인 듯...
+	#	확인하니 그 문자는 xml에 담을 수 없다고 나옴. 그래서 지우라고 함.;;;
+		$xml_writer->cdata($the_post->{content_html});
+		$xml_writer->endTag("content_html");
+	}
+	else
+	{
+		my_print("Error: content_html");
+	}
 	
 	
 	# XML 종료

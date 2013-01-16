@@ -219,13 +219,14 @@ sub new ($$$$\%\@)
 		#	있으니 가져오기	
 		$time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');	
-		if($description ne '')
-		{
+		#if($description ne '')
+		#if(!defined $description)
+		#{
 			$description = $6;
 			$description =~ s/^<font(?:[^>]+?)>//ig;
 			$description =~ s/<\/font>$//ig;
 			chomp($description);
-		}
+		#}
 		
 	}
 	elsif($content =~ m/<span>(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
@@ -233,13 +234,14 @@ sub new ($$$$\%\@)
 		# 올해의 것
 		$time = DateTime->new(year => DateTime->now()->year(), month  => $1, day => $2,
 						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
-		if($description ne '')
-		{
+		#if($description ne '')
+		#if(!defined $description)
+		#{
 			$description = $5;
 			$description =~ s/^<font(?:[^>]+?)>//ig;
 			$description =~ s/<\/font>$//ig;
 			chomp($description);
-		}	
+		#}	
 	}
 	else
 	{
@@ -274,6 +276,8 @@ sub new ($$$$\%\@)
 		$description =~ s/&amp;/&/ig;
 	#	<br><br /><br/> -> \n
 		$description =~ s/<br[ \/]*?>/\n/ig;
+	#	<a href="http://nosyu.pe.kr/">http://nosyu.pe.kr/</a>
+		$description =~ s/<a href="[^>]+?>(.+?)<\/a>/$1/ig;
 		
 #	저장할 변수를 hash로 만든다.
 #	여기에 대해서 NoSyu도 가르쳐 줄만큼 명확하게 이해하지 않았기에 코드를 생략한다.

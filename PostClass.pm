@@ -128,20 +128,22 @@ sub new ($$$\%%)
 		$visibility = $open_close{post};
 #		댓글 : 댓글창에 '이 포스트는 더 이상 덧글을 남길 수 없습니다.' 라는 말이 뜬다.
 #		트랙백 : 현재 방법을 찾지 못했다.
+#		간단히 '관련글'이라는 것이 보이면 트랙백을 받는 것으로 하자. 설령 막았다고 하더라도...
+#		즉, 하나도 없어도 관련글을 받으려고 하면 '관련글'이 뜨지만, 받지 않는다고 하여도 기존에 받은게 있으면 어쩔 수 없이 뜬다.
 #		트랙백 공개여부.
-#		my $target_needle = '<a href="/m/trackback/' + $postid + '">관련글 <span>';
-#		if($post_field =~ m/$target_needle/i)
-#		{
-#			$acceptTrackback = 1;
-#		}
-#		else
-#		{
-#			$acceptTrackback = 0;
-#		}
+		my $target_needle = '<a href="/m/trackback/' . $postid . '">관련글 <span>';
+		if($content_html =~ m/$target_needle/i)
+		{
+			$acceptTrackback = 1;
+		}
+		else
+		{
+			$acceptTrackback = 0;
+		}
 
 #		덧글 공개여부
 		my $comment_content_html = BackUpEgloos_Subs::getpage($egloosinfo->{blogurl} . '/m/comment/' . $postid, 0);
-		my $target_needle = '<div class="reply_write">                ※ 이 포스트는 더 이상 덧글을 남길 수 없습니다.                </div>';
+		$target_needle = '<div class="reply_write">                ※ 이 포스트는 더 이상 덧글을 남길 수 없습니다.                </div>';
 		if($comment_content_html =~ m/$target_needle/i)
 		{
 			$acceptComment = 0;
