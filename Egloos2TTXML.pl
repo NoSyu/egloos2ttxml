@@ -183,6 +183,7 @@ while(1)
 	elsif('2' eq $number)
 	{
 		my $numbers; # 유저로부터 받는 숫자.
+		my $how_many;
 		while(1)
 		{
 			my_print("\nXML 파일을 하나로 하겠습니까? 여러 개로 하겠습니까?\n");
@@ -190,8 +191,18 @@ while(1)
 			$numbers = <STDIN>;
 			chomp($numbers);
 			
-			if('1' eq $numbers || '2' eq $numbers)
+			
+			if('1' eq $numbers)
 			{
+				last;
+			}
+			elsif('2' eq $numbers)
+			{
+				my_print("\n하나의 XML파일에 몇 개의 글을 담으시겠습니까?\n");
+				my_print("1 이상의 숫자를 입력해주세요.\n> ");
+				$how_many = <STDIN>;
+				chomp($how_many);
+				
 				last;
 			}
 			else
@@ -233,11 +244,6 @@ while(1)
 		{
 			# 여러 개로 나눠서 적는다.
 			my $i = 0; # $how_many개씩의 배열 조각.
-			
-			my_print("\n하나의 XML파일에 몇 개의 글을 담으시겠습니까?\n");
-			my_print("1 이상의 숫자를 입력해주세요.\n> ");
-			my $how_many = <STDIN>;
-			chomp($how_many);
 			
 			while(($i * $how_many) <= $all_post_count)
 			{

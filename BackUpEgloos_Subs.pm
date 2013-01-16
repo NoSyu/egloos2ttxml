@@ -1753,18 +1753,20 @@ sub writeTTXML($$$$\@\@\@\%)
 	else
 	{
 		# xml 파일을 나눠야 하는 경우.
-		my $idx = ($number - 1) * 100;
-		my $end_idx = $number * 100;
+		my $idx = ($number - 1) * $how_many;
+		my $end_idx = $number * $how_many;
 		my $the_post; # 해당 포스트.
 		for( ; $idx < $end_idx ; $idx++)
 		{
 			$the_post = @$all_post[$idx]; # 해당 포스트.
-			
-			# 포스트 하나 xml에 쓰기.
-			write_post($egloosinfo, $the_post, $xml_writer, ($idx+1), @$all_trackback, @$all_comment, %$postid_index);
-		#	기존의 포스트 수정.
-		#	현재 쓰지 않기에 주석으로 처리.
-		#	editpost($egloosinfo, $postid, $i, $egloosinfo->{newblogurl}, $new_description);
+			if(defined $the_post)
+			{
+				# 포스트 하나 xml에 쓰기.			
+				write_post($egloosinfo, $the_post, $xml_writer, ($idx+1), @$all_trackback, @$all_comment, %$postid_index);
+			#	기존의 포스트 수정.
+			#	현재 쓰지 않기에 주석으로 처리.
+			#	editpost($egloosinfo, $postid, $i, $egloosinfo->{newblogurl}, $new_description);
+			}
 		}
 	}
 	my_print("모든 글과 댓글, 트랙백을 가져와서 xml에 작성하였습니다.\n\n");
