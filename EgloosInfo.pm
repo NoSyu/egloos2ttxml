@@ -36,11 +36,21 @@ sub new ($$$)
 #	클래스 이름 전달
 	my $class = shift;
 #	아이디와 비밀번호, 새로운 블로그를 받음.
-	my ($id, $pw, $newblogurl, $is_use_mobile) = @_;
+	my ($id, $pw, $newblogurl, $is_use_mobile, $is_nate) = @_;
 	
 #	로그인하기
 	BackUpEgloos_Subs::my_print("로그인 중...\n");
-	BackUpEgloos_Subs::login_egloos($id, $pw);
+	if(1 != $is_nate)
+	{
+		# Egloos
+		BackUpEgloos_Subs::login_egloos($id, $pw);
+	}
+	else
+	{
+		# Nate
+		BackUpEgloos_Subs::login_egloos_nate($id, $pw);
+	}
+	
 #	로그인이 제대로 되었는지 확인하기
 #	블로그 정보 가져오기
 	BackUpEgloos_Subs::my_print("로그인 완료...\n");

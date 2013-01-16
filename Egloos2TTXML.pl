@@ -90,7 +90,7 @@ if(1 == $#ARGV)
 	# 들어온 인자가 두 개이기에 아이디와 비밀번호만 전달.
 	my_print("로그인을 통해 이글루스 정보를 가져오는 중...\n");
 	# 그리고 새로운 블로그 주소는 ''으로 처리한다. 이로서 EgloosInfo에서는 입력이 들어오지 않았다는 것을 알 수 있다.
-	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], '', $is_use_mobile);
+	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], '', $is_use_mobile, 0);
 	
 }
 elsif(2 == $#ARGV)
@@ -98,7 +98,7 @@ elsif(2 == $#ARGV)
 	# 들어온 인자가 세 개임.
 	my_print("로그인을 통해 이글루스 정보를 가져오는 중...\n");
 	# 차례대로 넣는다.
-	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], $ARGV[2], $is_use_mobile);
+	$egloosinfo = EgloosInfo->new($ARGV[0], $ARGV[1], $ARGV[2], $is_use_mobile, 0);
 }
 # 기존에는 그냥 die 시켰으나 사용자들을 위해 입력을 받도록 추가 - 2009.1.15
 else
@@ -108,16 +108,29 @@ else
 	my $id;
 	my $pw;
 	my $newblogurl;
+	my $is_nate;
 	
+	# 이글루스인지 네이트인지 확인한다.
+	my_print("\n이글루스 로그인? 네이트 로그인?\n");
+	my_print("이글루스 - 0, 네이트 - 1\n기본으로 이글루스로 설정됩니다.\n> ");
+	chomp($is_nate = <STDIN>);
+	if('' eq $is_nate || 1 != $is_nate)
+	{
+		my_print("이글루스 아이디와 비밀번호를 입력해주세요.\n");
+	}
+	else
+	{
+		my_print("네이트 아이디와 비밀번호를 입력해주세요.\n");
+	}
 	
 	# 아이디를 받는다.
-	my_print("로그인을 위해 이글루스 아이디와 비밀번호, \n그리고 이사를 위해 새로운 블로그 주소를 넣어주세요.\n");
-	my_print("이글루스 아이디 :  ");
+	my_print("\n로그인을 위해 아이디와 비밀번호, \n그리고 이사를 위해 새로운 블로그 주소를 넣어주세요.\n");
+	my_print("아이디 :  ");
 	chomp($id = <STDIN>);
-	my_print("아이디 : $id\n");
+	my_print("입력받은 아이디 : $id\n");
 	
 	# 비밀번호를 받는다.
-	my_print("\n이글루스 비밀번호(입력받은 비밀번호는 화면에 나오지 않습니다.) :  ");
+	my_print("\n비밀번호(입력받은 비밀번호는 화면에 나오지 않습니다.) :  ");
 	ReadMode 2; # password를 비밀로 받기 위해서 설정.
 	chomp($pw = <STDIN>);
 	ReadMode 0; # 원래 상태로 복구.
@@ -139,7 +152,7 @@ else
 	}
 		
 	# Egloosinfo 변수를 생성한다.
-	$egloosinfo = EgloosInfo->new($id, $pw, $newblogurl, $is_use_mobile);
+	$egloosinfo = EgloosInfo->new($id, $pw, $newblogurl, $is_use_mobile, $is_nate);
 }
 my_print("로그인 및 이글루스 정보 가져오기 완료.\n\n");
 
@@ -199,7 +212,7 @@ while(1)
 			elsif('2' eq $numbers)
 			{
 				my_print("\n하나의 XML파일에 몇 개의 글을 담으시겠습니까?\n");
-				my_print("1 이상의 숫자를 입력해주세요.\n> ");
+				my_print("1 이상의 숫자를 입력해주세요.\n글의 총 개수보다 작아야 합니다.\n> ");
 				$how_many = <STDIN>;
 				chomp($how_many);
 				

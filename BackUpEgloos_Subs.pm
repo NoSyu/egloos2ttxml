@@ -28,6 +28,7 @@ use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
 login_egloos
+login_egloos_nate
 getpage
 downImage
 numtonumstr
@@ -82,6 +83,43 @@ sub login_egloos ($$)
 		userid => $id, 
 		userpwd => $pw},
 	button => 'lbtn');
+	
+	# 로그인이 제대로 되었는지 확인
+	#my $login_ok_url = 'https://www.egloos.com/login/login_ok.php?reurl=http://www.egloos.com';
+	my $result_url = $EgloosInfo::mech->uri()->as_string;
+	if($result_url =~ m/errorno/ig)
+	{
+		my_print("로그인 에러... 아이디와 비밀번호를 확인하세요.\n");
+		die;
+	}
+	else
+	{
+		return;
+	}
+}
+
+
+
+# Nate 아이디와 비밀번호로 로그인 함수.
+# 실제로 EgloosInfo에서만 처음에 호출되는 함수이기에 거기에 만들어서 사용하는 것이 좋으나, 전역변수로서 $EgloosInfo::mech가 제대로 작동하는지 확인하고자 여기에 만들었고, 잘 작동하기에 리팩토링을 하지 않고 그대로 사용하게 되었음.
+# EgloosInfo 패키지에 넣고 싶다면 언제라도 넣어도 되는 함수.
+sub login_egloos_nate ($$)
+{
+	my ($id, $pw) = @_;
+	my $loginpage = 'http://www.egloos.com';
+	
+#	WWW::Mechanize 라이브러리는 form 형식에 맞게 submit을 지원하기에 아주 쉽게 만들 수 있음.
+#	물론 이 방법이 아니고 무식하게 POST 방식으로 아이디와 비밀번호를 전달하여 로그인을 처리하는 php에 접속하여 로그인하는 방법도 가능하다.
+#	다만, 이것이 좀 더 깔끔해 보이기에 이렇게 처리하였다.
+#	이 함수 이후로 $EgloosInfo::mech는 로그인 된 쿠키(세션?)을 가지게 되어, 비밀글과 비밀댓글을 볼 수 있다.
+	$EgloosInfo::mech->get($loginpage);
+	
+	$EgloosInfo::mech->submit_form(
+	form_id => "authform",
+	fields => {
+		userid_nate => $id, 
+		userpwd_nate => $pw},
+	button => 'lbtn_nate');
 	
 	# 로그인이 제대로 되었는지 확인
 	#my $login_ok_url = 'https://www.egloos.com/login/login_ok.php?reurl=http://www.egloos.com';
