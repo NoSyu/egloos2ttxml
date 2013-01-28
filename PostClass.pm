@@ -231,19 +231,7 @@ sub new ($$$\%%)
 			$cmt_page++;
 		}
 		
-#		xml에 쓸 수 없는 글자가 있는 경우 일단 점으로 바꾼다.
-#		밑의 코드는 XML::Writer에서 가져온 것이다. 여기에서 에러를 일으키기에 그 아이디어를 가져왔다.
-# XML\Writer.pm 767~773
-# Enforce XML 1.0, section 2.2's definition of "Char" (only reject low ASCII,
-#  so as not to require Unicode support from perl)
-#sub _croakUnlessDefinedCharacters($) {
-#  if ($_[0] =~ /([\x00-\x08\x0B-\x0C\x0E-\x1F])/) {
-#    croak(sprintf('Code point \u%04X is not a valid character in XML', ord($1)));
-#  }
-#}
-#		유니코드 0x25CF는 점을 뜻한다.
-		$content_html =~ s/[\x00-\x08\x0B-\x0C\x0E-\x1F]/\x{25CF}/g;
-		
+
 		
 #		이미지 다운로드 받기.
 		#download_m($description, $postid);	# 다운로드 받기 - 백업용도로 처리

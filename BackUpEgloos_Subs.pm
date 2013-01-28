@@ -155,6 +155,23 @@ sub getpage ($$)
 		$content =~ s/[\n\r\t]//g;
 		$content =~ s/>( )+</></g;
 		
+#	xml에 쓸 수 없는 글자가 있는 경우 일단 점으로 바꾼다.
+#		밑의 코드는 XML::Writer에서 가져온 것이다. 여기에서 에러를 일으키기에 그 아이디어를 가져왔다.
+# XML\Writer.pm 767~773
+# Enforce XML 1.0, section 2.2's definition of "Char" (only reject low ASCII,
+#  so as not to require Unicode support from perl)
+#sub _croakUnlessDefinedCharacters($) {
+#  if ($_[0] =~ /([\x00-\x08\x0B-\x0C\x0E-\x1F])/) {
+#    croak(sprintf('Code point \u%04X is not a valid character in XML', ord($1)));
+#  }
+#}
+#		유니코드 0x25CF는 점을 뜻한다.
+		if ($content =~ /([\x00-\x08\x0B-\x0C\x0E-\x1F])/) 
+		{
+			print_txt('URL : ' . $pageurl . "에 있는 내용 중 XML에 적합하지 않은 글자가 있습니다.\n이것들은 점으로 표현하였으니 후에 수정하세요.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
+			$content =~ s/[\x00-\x08\x0B-\x0C\x0E-\x1F]/\x{25CF}/g;
+		}
+		
 #		반환
 		return $content;
 	}
