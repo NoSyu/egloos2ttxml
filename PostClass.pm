@@ -88,40 +88,51 @@ sub new ($$$\%%)
 		# <span class="name">dongdm</span> 1시간전                </p>
 		# 이런 것도 있기에 난감. 그냥 저런 건 00:00으로 처리한다.
 		$time = BackUpEgloos_Subs::findstr($content_html, '<span class="name">(?:.*?)</span>', '</p>');
-		$time =~ /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i;
-		if(!$5)
+		if($time =~ /(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i)
 		{
-			# 01/02 10:25 방식도 있음
-			if($time =~ /(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i)
+			# 제대로 처리된 것
+			if(!$5)
 			{
-				# year는 프로그램이 돌아가는 시점의 년도로 처리
-				my $now_year = (localtime(time))[5];
-				$now_year += 1900;
-				$time = DateTime->new(year => $now_year, month  => $1, day => $2,
-						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
-			}
-			else
-			{
-				# 1시간전 이런 식임.
-				if($open_close{datetime_info} =~ /(\d{4})\/(\d{2})\/(\d{2})/i)
+				# 01/02 10:25 방식도 있음
+				if($time =~ /(\d{2})\/(\d{2}) (\d{2}):(\d{2})/i)
 				{
-					$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
-					BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근이라 시간 정보가 명확하지 않습니다.\n그렇기에 글이 적힌 시각이 0시 0분 0초로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
+					# year는 프로그램이 돌아가는 시점의 년도로 처리
+					my $now_year = (localtime(time))[5];
+					$now_year += 1900;
+					$time = DateTime->new(year => $now_year, month  => $1, day => $2,
+							hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
 				}
 				else
 				{
-					# 1시간전 이런 식이면서 메뉴릿 등이라 글 리스트에 나타나지 않음.
-					$time = DateTime->now(time_zone => 'Asia/Seoul');
-					BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근이며 이글루 관리 글 목록에 없습니다.\n그렇기에 글이 적힌 시각을 현재 시각으로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
+					# 1시간전 이런 식임.
+					if($open_close{datetime_info} =~ /(\d{4})\/(\d{2})\/(\d{2})/i)
+					{
+						$time = DateTime->new(year => $1, month  => $2, day => $3,
+							hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+						BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근이라 시간 정보가 명확하지 않습니다.\n그렇기에 글이 적힌 시각이 0시 0분 0초로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
+					}
+					else
+					{
+						# 1시간전 이런 식이면서 메뉴릿 등이라 글 리스트에 나타나지 않음.
+						$time = DateTime->now(time_zone => 'Asia/Seoul');
+						BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근이며 이글루 관리 글 목록에 없습니다.\n그렇기에 글이 적힌 시각을 현재 시각으로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
+					}
 				}
+			}
+			else
+			{
+				$time = DateTime->new(year => $1, month  => $2, day => $3,
+					hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
 			}
 		}
 		else
 		{
-			$time = DateTime->new(year => $1, month  => $2, day => $3,
-				hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');
+			# 3시간 전 이라는 식으로 처리된 글
+			# 그냥 프로그램이 동작하던 시각으로 처리
+			$time = DateTime->now(time_zone => 'Asia/Seoul');
+			BackUpEgloos_Subs::print_txt('글 : ' . $postid . "이 적힌 시간이 최근입니다.\n따라서 글이 적힌 시각을 현재 시각으로 하였습니다.\n에러가 아니기에 프로그램은 계속 진행됩니다.");
 		}
+		
 		$time = $time->epoch();
 
 #		글 공개여부.

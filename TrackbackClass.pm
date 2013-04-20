@@ -31,11 +31,19 @@ sub new ($$$$$\%\@)
 #	관리 페이지에서 트랙백 보낸 곳의 정보 가져오기 및 다른 것들 포함
 #	예제.
 #	name="chk" value="2500689-628128" /></td><td>3</td><td class="sub"><a href="http://dongdm.egloos.com/2500689" title="좋다!!!!! ㄱㄱㄱㄱㄱㄱㄱㄱㄱ" target="_blank">좋다!!!!! ㄱㄱㄱㄱㄱㄱㄱㄱㄱ</a></td><td class="sub"><a href="http://nosyu.tistory.com/10" title="NoSyu's Blog : 비밀글!!!!!!!" target="_blank">NoSyu's Blog : 비밀글!!!!!!!</a></td><td>2011-01-02</td></tr>
-	$trackback_field =~ m/<\/td><td>(?:[0-9]+?)<\/td><td class="sub"><a href="[^"]+" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td><td class="sub"><a href="([^"]+)" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td>/i;
-	$description = $1;
-	$href = $2;
-	$post_title = $3;
-	$blog_title = $post_title;		# 이것을 알려면 해당 주소에 접근해야 하기에 일이 많아진다. 따라서 post_title과 동일시한다.
+	if($trackback_field =~ m/<\/td><td>(?:[0-9]+?)<\/td><td class="sub"><a href="[^"]+" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td><td class="sub"><a href="([^"]+)" title="(.*?)" target="_blank">(?:.*?)<\/a><\/td>/i)
+	{
+		$description = $1;
+		$href = $2;
+		$post_title = $3;
+		$blog_title = $post_title;		# 이것을 알려면 해당 주소에 접근해야 하기에 일이 많아진다. 따라서 post_title과 동일시한다.
+	}
+	else
+	{
+		BackUpEgloos_Subs::my_print('글 : ' . $postid . "의 트랙백 아이디 " . $trackbackid . "의 내용을 가져올 수 없습니다.");
+		die;
+	}
+	
 	
 #	트랙백이 적혀진 글의 페이지 가져오기. - 수정 2009.01.11
 #	트랙백이 프로그램이 시작하는 오늘 적혔다면 다시 읽어오기. - 2009-1-13
@@ -114,11 +122,11 @@ sub new ($$$$$\%\@)
 	else
 	{
 		# 못 찾았기에 관리 페이지에 있는 것을 한다. 이것은 0시 0분 0초가 된다.
-		$trackback_field =~ m/<td width="80" align="center" class="black">(\d{4})\/(\d{2})\/(\d{2})<\/td><\/tr>/i;
+		$trackback_field =~ m/<td>(\d{4})-(\d{2})-(\d{2})<\/td><\/tr>/i;
 		$time = DateTime->new(year => $1, month  => $2, day => $3,
 						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
 		
-		BackUpEgloos_Subs::print_txt("트랙백 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $trackbackid . "\n");
+		BackUpEgloos_Subs::my_print("트랙백 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $trackbackid . "\n");
 	}
 	$time = $time->epoch();
 	

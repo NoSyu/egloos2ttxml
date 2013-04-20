@@ -61,9 +61,10 @@ sub new ($$$$\%\@)
 	}
 	
 #	postid와 댓글 id 가져오기.
-	$comment_field =~ m/^name="chk" value="(\d+?)-(.+?)"/i;
+	$comment_field =~ m/^name="chk" value="(\d+?)-(.+?)0000"/i;
 	$postid = $1;
 	$commentid = $2;
+	$commentid =~ s/\.00//ig;
 	
 #	댓글 적은이 정보 가져오기.
 #	예제.
@@ -210,60 +211,32 @@ sub new ($$$$\%\@)
 #                        </p>
 #                        
 #                    </div>
-	my $delete_needle = '<img src="http://md.egloos.com/img/mobile/ico_lock.gif" alt="비밀글" class="ico_lock" />';
-	my $end_not_needle = "'" . $egloosinfo->{eid} . "', '" . $postid . "'";
-	my $end_needle = "'" . $egloosinfo->{eid} . "', '" . $postid . "', '" . $commentid;
-	$content =~ s/$delete_needle//ig;
-	if($content =~ m/<span>(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
+	# description
+	if($content =~ m/<font id="comment_$commentid?">(.+)<\/font>/i)
 	{
-		#	있으니 가져오기	
-		$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');	
-		#if($description ne '')
-		#if(!defined $description)
-		#{
-			$description = $6;
-			$description =~ s/^<font(?:[^>]+?)>//ig;
-			$description =~ s/<\/font>$//ig;
-			chomp($description);
-		#}
-		
-	}
-	elsif($content =~ m/<span>(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
-	{
-		# 올해의 것
-		$time = DateTime->new(year => DateTime->now()->year(), month  => $1, day => $2,
-						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
-		#if($description ne '')
-		#if(!defined $description)
-		#{
-			$description = $5;
-			$description =~ s/^<font(?:[^>]+?)>//ig;
-			$description =~ s/<\/font>$//ig;
-			chomp($description);
-		#}	
+		# 그냥 댓글
+		$description = $1;
+		$description =~ s/^<font(?:[^>]+?)>//ig;
+		$description =~ s/<\/font>$//ig;
+		chomp($description);
 	}
 	else
 	{
-		# 본문에 얻기 힘드니 관리 페이지에서 가져오자.
-		$comment_field =~ m/<td>(\d{4})-(\d{2})-(\d{2})<\/td><\/tr>/i;
-		$time = DateTime->new(year => $1, month  => $2, day => $3,
-						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+		BackUpEgloos_Subs::my_print('글 : ' . $postid . "의 댓글 아이디 " . $commentid . "의 내용을 가져올 수 없습니다.\n");
+		BackUpEgloos_Subs::my_print("따라서 관리 페이지에서 가져옵니다.\n이는 내용이 잘리거나 할 수 있습니다.\n");
 		
-		if($comment_field =~ m/<td class="sub"><a href="(?:.+?)" title="(.+?)" target="_blank">/is)
+		if($comment_field =~ m/<td class="sub">(?:<i class="secret">비밀글<\/i>)?<a href=[^>]+?>(.+?)<\/a><\/td>/i)
 		{
 			$description = $1;
-			$description =~ s/^\[답글\]//ig;
-			$description =~ s/^\[비밀댓글\]//ig;
-			chomp($description);
+			$description =~ s/[답글] //ig;
 		}
-	
-		if(0 == $all_post->[$postid_index->{$postid}]->{is_menu_page})
+		else
 		{
-			BackUpEgloos_Subs::my_print("댓글 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $commentid . "\n");
+			BackUpEgloos_Subs::my_print("관리 페이지에서 가져오는 것도 실패하였습니다.\n");
+			die;
 		}
+		
 	}
-	$time = $time->epoch();
 	
 	# 이런 태그를 처리하는 함수가 있을 것으로 추정되나 찾을 수 없음.
 	#	&quot; -> "
@@ -278,7 +251,65 @@ sub new ($$$$\%\@)
 		$description =~ s/<br[ \/]*?>/\n/ig;
 	#	<a href="http://nosyu.pe.kr/">http://nosyu.pe.kr/</a>
 		$description =~ s/<a href="[^>]+?>(.+?)<\/a>/$1/ig;
+	
+	
+	# time
+	my $delete_needle = '<img src="http://md.egloos.com/img/mobile/ico_lock.gif" alt="비밀글" class="ico_lock" />';
+	my $end_not_needle = "'" . $egloosinfo->{eid} . "', '" . $postid . "'";
+	my $end_needle = "'" . $egloosinfo->{eid} . "', '" . $postid . "', '" . $commentid;
+	$content =~ s/$delete_needle//ig;
+	if($content =~ m/<span>(\d{4})\/(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
+	{
+		#	있으니 가져오기	
+		$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => $4, minute => $5, second => 0, time_zone => 'Asia/Seoul');	
+		#if($description ne '')
+		#if(!defined $description)
+		#{
+#			$description = $6;
+#			$description =~ s/^<font(?:[^>]+?)>//ig;
+#			$description =~ s/<\/font>$//ig;
+#			chomp($description);
+		#}
 		
+	}
+	elsif($content =~ m/<span>(\d{2})\/(\d{2}) (\d{2}):(\d{2})<\/span><\/span><p>((?:(?!delComment\($end_not_needle).)*?)<a href="#;" onclick="delComment\($end_needle/i)
+	{
+		# 올해의 것
+		$time = DateTime->new(year => DateTime->now()->year(), month => $1, day => $2,
+						hour => $3, minute => $4, second => 0, time_zone => 'Asia/Seoul');
+		#if($description ne '')
+		#if(!defined $description)
+		#{
+#			$description = $5;
+#			$description =~ s/^<font(?:[^>]+?)>//ig;
+#			$description =~ s/<\/font>$//ig;
+#			chomp($description);
+		#}	
+	}
+	else
+	{
+		# 본문에 얻기 힘드니 관리 페이지에서 가져오자.
+		$comment_field =~ m/<td>(\d{4})-(\d{2})-(\d{2})<\/td><\/tr>/i;
+		$time = DateTime->new(year => $1, month  => $2, day => $3,
+						hour => 0, minute => 0, second => 0, time_zone => 'Asia/Seoul');
+		
+#		if($comment_field =~ m/<td class="sub"><a href="(?:.+?)" title="(.+?)" target="_blank">/is)
+#		{
+#			$description = $1;
+#			$description =~ s/^\[답글\]//ig;
+#			$description =~ s/^\[비밀댓글\]//ig;
+#			chomp($description);
+#		}
+	
+		if(0 == $all_post->[$postid_index->{$postid}]->{is_menu_page})
+		{
+			BackUpEgloos_Subs::my_print("댓글 시각을 제대로 가져오지 못했기에 관리 페이지에 있는 정보로만 입력합니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . '#' . $commentid . "\n");
+		}
+	}
+	$time = $time->epoch();
+	
+
 #	저장할 변수를 hash로 만든다.
 #	여기에 대해서 NoSyu도 가르쳐 줄만큼 명확하게 이해하지 않았기에 코드를 생략한다.
 #	다만, Package에서 변수 등록을 이렇게 하는 것이고, 좀 더 자세한 것은 Perl 책을 참조하기를 바란다.
