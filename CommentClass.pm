@@ -32,25 +32,8 @@ sub new ($$$$\%\@)
 	# 이글루스 정보, 백업하는 블로그 주소, 댓글 목록에서 해당 댓글 정보가 담겨있는 html 코드, 프로그램이 시작한 시각(24시간 내의 댓글을 새로 받기 위해.), all_post를 찾기 위한 hash table, PostClass 배열.
 	my ($egloosinfo, $blogurl, $comment_field, $dt_today, $postid_index, $all_post) = @_;
 	
-	
-#	답글여부.
-	# 정규표현식 안에 구문을 적으면 escape 문자를 신경써야하기에 골치가 아프다.
-	# 따라서 이런 식으로 문자열 변수를 만들어 처리한다.
-	# 다른 코드에서도 이런식으로 한 곳이 많다.
-	# 성능은 떨어지겠지만 코드 개발 및 읽기에 효율적이라 생각한다.
-	# 다만, ()의 경우 앞에 \을 붙여야 괄호로 인식한다.
-	my $needle1 = '<td class="sub"><a href="(?:.+?)" title="\[답글\]';
-	if($comment_field =~ m/$needle1/ig)
-	{
-		$is_root = 0; # 있으니까 답댓글.
-	}
-	else
-	{
-		$is_root = 1; # 없으니까 root 댓글. 여기서 root 댓글이란 답댓글이 아닌 것. 딱히 이름을 무어라 불러야 할지 몰라서 Tree의 root를 붙였다.
-	}
-	
 #	비밀글 여부.
-	$needle1 = '<i class="secret">비밀글</i>';
+	my $needle1 = '<i class="secret">비밀글</i>';
 	if($comment_field =~ m/$needle1/ig)
 	{
 		$is_secret = 1; # 있으니까 비밀 댓글..
@@ -211,6 +194,23 @@ sub new ($$$$\%\@)
 #                        </p>
 #                        
 #                    </div>
+
+#	답글여부.
+	# 정규표현식 안에 구문을 적으면 escape 문자를 신경써야하기에 골치가 아프다.
+	# 따라서 이런 식으로 문자열 변수를 만들어 처리한다.
+	# 다른 코드에서도 이런식으로 한 곳이 많다.
+	# 성능은 떨어지겠지만 코드 개발 및 읽기에 효율적이라 생각한다.
+	# 다만, ()의 경우 앞에 \을 붙여야 괄호로 인식한다.
+	# 앞의 말은 무슨 말인지 잘 모르겠고, 일단 관리 페이지가 아닌 id에서 정보를 얻는다.
+	if($commentid =~ m/[0-9]+?\.[0-9]+$/i)
+	{
+		$is_root = 0; # id의 형태가 답댓글.
+	}
+	else
+	{
+		$is_root = 1; # 없으니까 root 댓글. 여기서 root 댓글이란 답댓글이 아닌 것. 딱히 이름을 무어라 불러야 할지 몰라서 Tree의 root를 붙였다.
+	}
+	
 	# description
 	if($content =~ m/<font id="comment_$commentid?">(.+)<\/font>/i)
 	{
@@ -228,7 +228,7 @@ sub new ($$$$\%\@)
 		if($comment_field =~ m/<td class="sub">(?:<i class="secret">비밀글<\/i>)?<a href=[^>]+?>(.+?)<\/a><\/td>/i)
 		{
 			$description = $1;
-			$description =~ s/[답글] //ig;
+			$description =~ s/\[답글\] //ig;
 		}
 		else
 		{

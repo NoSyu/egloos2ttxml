@@ -24,6 +24,10 @@ use IO::File; # File 입출력.
 use XML::Writer; # xml 작성 라이브러리.
 #use WordPress::XMLRPC; # editpost 때 쓰이는 라이브러리.
 
+# Debugger
+use Try::Tiny;
+use Data::Dumper;
+
 use Exporter;
 our @ISA = qw(Exporter);
 our @EXPORT = qw(
@@ -594,14 +598,24 @@ sub write_comments ($\@$)
 	#		따라서 설령 뒤의 것이 boundary를 넘어서 살펴보는 버그를 일으키는 코드가 될 수 있을지라도
 	#		그 때는 이미 앞의 것이 true가 되어 실행되지 않을 것이기에 문제가 없을 것이다.
 	#		하지만 이는 안되는 듯싶어 ||이 아니라 elsif로 처리.
-			if($comment_point == $end_point)
+			try
 			{
-				$xml_writer->endTag("comment");
+				if($comment_point == $end_point)
+				{
+					$xml_writer->endTag("comment");
+				}
+				elsif(1 == $all_comment->[$comment_point+1]->{is_root})
+				{
+					$xml_writer->endTag("comment");
+				}
 			}
-			elsif(1 == $all_comment->[$comment_point+1]->{is_root})
+			catch
 			{
-				$xml_writer->endTag("comment");
+				print_txt($the_post);
+				my_print(Dumper($the_post));
+				die;
 			}
+			
 		}	# for 문 종료.
 	}
 	else
