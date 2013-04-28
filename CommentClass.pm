@@ -120,6 +120,10 @@ sub new ($$$$\%\@)
 		$open_close{trackback_cnt} = 0;
 		$open_close{category_info} = '미분류';
 		
+		$open_close{datetime_info} = 0;	# 가져올 수 없기에 일단 0
+		$open_close{post_title} = 0;	# 가져올 수 없다.
+		$open_close{comment_cnt} = 0;	# 가져올 수 없다.
+		
 		my $filename = 'data/' . $postid . '/content.xml';
 		
 #		post 변수 생성.
@@ -166,7 +170,7 @@ sub new ($$$$\%\@)
 		BackUpEgloos_Subs::my_print("이글루스가 임시 조치한 글 혹은 메뉴릿을 추가하였습니다.\n" . "URL : " . $egloosinfo->{blogurl} . "/" . $postid . " - 제목 : " . $the_post->{title} . "\n");
 #		>>으로 처리하여 기존의 글에 추가한다.
 		open(OUT, ">>:encoding(utf8) " , 'Egloos_blind_or_menu.txt') or die $!;
-		print OUT $postid . ' : ' .$the_post->{title} . "\n\n";
+		print OUT $postid . ' : ' .$the_post->{title} . "\n";
 		close(OUT);
 		
 		$content = $all_post->[$postid_index->{$postid}]->{content_html};
@@ -212,7 +216,7 @@ sub new ($$$$\%\@)
 	}
 	
 	# description
-	if($content =~ m/<font id="comment_$commentid?">(.+)<\/font>/i)
+	if($content =~ m/<font id="comment_$commentid?">(.+?)<\/font>/i)
 	{
 		# 그냥 댓글
 		$description = $1;
