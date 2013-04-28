@@ -358,7 +358,8 @@ sub write_post ($$$$\@\@\%)
 	
 	# id : 글의 번호
 	$xml_writer->startTag("id");
-	$xml_writer->characters($id);
+#	$xml_writer->characters($id);
+	$xml_writer->characters($egloosinfo->{egloos_postid_to_textcube_postid}{$the_post->{postid}});
 	$xml_writer->endTag("id");
 	
 	# visibility : 공개여부
@@ -434,7 +435,8 @@ sub write_post ($$$$\@\@\%)
 	{
 		if($the_post->{description} =~ m/$egloosinfo->{blogurl}\/(\d{6,7})/ig)
 		{
-			my $new_postid = scalar(keys(%$postid_index)) - $postid_index->{$1};
+#			my $new_postid = scalar(keys(%$postid_index)) - $postid_index->{$1};
+			my $new_postid = $egloosinfo->{egloos_postid_to_textcube_postid}{$1};
 			$the_post->{description} =~ s/$egloosinfo->{blogurl}\/(\d{6,7})/$egloosinfo->{newblogurl}\/$new_postid/ig;
 		}
 	}
@@ -458,7 +460,7 @@ sub write_post ($$$$\@\@\%)
 	#	하지만 그 코드는 삭제 가능성이 있기에 삭제 가능성이 없는 이 코드를 그대로 사용하기로 함.
 	if(-1 != $the_post->{start_trackbacks})
 	{
-		write_trackbacks($the_post, $all_trackback, $xml_writer);
+		write_trackbacks($egloosinfo, $the_post, $all_trackback, $xml_writer);
 	}
 	
 	
@@ -470,7 +472,7 @@ sub write_post ($$$$\@\@\%)
 	#	댓글의 개수를 Postclass안에서 구해서 저장하였기에 이렇게 하지 않아도 되지만, 삭제 가능성이 있어 그대로 둠.
 	if(-1 != $the_post->{start_comments})
 	{
-		write_comments($the_post, $all_comment, $xml_writer);
+		write_comments($egloosinfo, $the_post, $all_comment, $xml_writer);
 	}
 	
 	
@@ -480,10 +482,10 @@ sub write_post ($$$$\@\@\%)
 
 
 # 트랙백 xml에 쓰는 함수.
-sub write_trackbacks ($\@$)
+sub write_trackbacks ($$\@$)
 {
 #	html 형식, trackback 개수, xml writer
-	my ($the_post, $all_trackback, $xml_writer) = @_;
+	my ($egloosinfo, $the_post, $all_trackback, $xml_writer) = @_;
 #	start_trackbacks와 end_trackback는 $all_trackback안에 해당 포스트에 연결되어 있는 트랙백의 시작 index와 끝 index를 말함.
 #	따라서 trackback_point에서는 그 처음 index를 초기화하여 처리한 후 하나씩 증가하여 end_point까지 도착하도록 함.
 	my $trackback_point = $the_post->{start_trackbacks};
@@ -492,6 +494,10 @@ sub write_trackbacks ($\@$)
 	
 #	루프.
 #	start_trackbacks부터 end_trackbacks까지 달린다.
+	my $each_trackback_url;
+	my $blogurl = $egloosinfo->{blogurl};
+	my $newblogurl = $egloosinfo->{newblogurl};
+	
 	for ( ; $trackback_point <= $end_point ; $trackback_point++)
 	{
 		$trackback_class = $all_trackback->[$trackback_point];
@@ -501,8 +507,18 @@ sub write_trackbacks ($\@$)
 #		하지만 TrackbackClass.pm에 모두 적었기에 그 파일의 주석 참고.
 		$xml_writer->startTag("trackback");
 		
+#		주소 안의 자신의 블로그 주소를 새로운 것으로 바꿈
+		$each_trackback_url = $trackback_class->{url};
+		if(!('' eq $newblogurl))
+		{
+			if($each_trackback_url =~ m/$blogurl\/(\d{6,7})/ig)
+			{
+				my $new_postid = $egloosinfo->{egloos_postid_to_textcube_postid}{$1};
+				$each_trackback_url =~ s/$blogurl\/(\d{6,7})/$newblogurl\/$new_postid/ig;
+			}
+		}
 		$xml_writer->startTag("url");
-		$xml_writer->cdata($trackback_class->{url});
+		$xml_writer->cdata($each_trackback_url);
 		$xml_writer->endTag("url");
 		
 		$xml_writer->startTag("site");
@@ -531,14 +547,17 @@ sub write_trackbacks ($\@$)
 
 # comment를 xml에 적는다.
 # 방식은 위의 write_trackbacks 함수와 비슷하나 답댓글이 존재하기에 태그를 닫을 때 신경써야 한다.
-sub write_comments ($\@$)
+sub write_comments ($$\@$)
 {
 #	html 형식, comment 개수, xml writer
-	my ($the_post, $all_comment, $xml_writer) = @_;
+	my ($egloosinfo, $the_post, $all_comment, $xml_writer) = @_;
 	my $comment_class; # CommentClass 임시 변수.
 #	방식은 위에 write_trackbacks와 동일하다.
 #	대신 메뉴릿 때문에 읽는 순서를 바꿔야 할 필요가 있다.
 #	최적화를 우선으로 하여 먼저 if문으로 확인 후 for문을 달린다.
+	my $each_comment_description;
+	my $blogurl = $egloosinfo->{blogurl};
+	my $newblogurl = $egloosinfo->{newblogurl};
 	
 	if(0 == $the_post->{is_menu_page})
 	{
@@ -571,8 +590,18 @@ sub write_comments ($\@$)
 			$xml_writer->endTag("commenter");
 			
 	#		나머지 태그 작성
+#			내용 안의 자신의 블로그 주소를 새로운 것으로 바꿈
+			$each_comment_description = $comment_class->{description};
+			if(!('' eq $newblogurl))
+			{
+				if($each_comment_description =~ m/$blogurl\/(\d{6,7})/ig)
+				{
+					my $new_postid = $egloosinfo->{egloos_postid_to_textcube_postid}{$1};
+					$each_comment_description =~ s/$blogurl\/(\d{6,7})/$newblogurl\/$new_postid/ig;
+				}
+			}
 			$xml_writer->startTag("content");
-			$xml_writer->cdata($comment_class->{description});
+			$xml_writer->cdata($each_comment_description);
 			$xml_writer->endTag("content");
 			
 			$xml_writer->emptyTag("password");
@@ -649,9 +678,19 @@ sub write_comments ($\@$)
 			
 			$xml_writer->endTag("commenter");
 			
-	#		나머지 태그 작성
+#			나머지 태그 작성
+#			내용 안의 자신의 블로그 주소를 새로운 것으로 바꿈
+			$each_comment_description = $comment_class->{description};
+			if(!('' eq $newblogurl))
+			{
+				if($each_comment_description =~ m/$blogurl\/(\d{6,7})/ig)
+				{
+					my $new_postid = $egloosinfo->{egloos_postid_to_textcube_postid}{$1};
+					$each_comment_description =~ s/$blogurl\/(\d{6,7})/$newblogurl\/$new_postid/ig;
+				}
+			}
 			$xml_writer->startTag("content");
-			$xml_writer->cdata($comment_class->{description});
+			$xml_writer->cdata($each_comment_description);
 			$xml_writer->endTag("content");
 			
 			$xml_writer->emptyTag("password");

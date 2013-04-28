@@ -110,18 +110,20 @@ else
 	my $newblogurl;
 	my $is_nate;
 	
+	# 네이트 아이디가 없으니 이거 테스트를 할 수 있나... 이글루스로만 설정
+	$is_nate = 0;
 	# 이글루스인지 네이트인지 확인한다.
-	my_print("\n이글루스 로그인? 네이트 로그인?\n");
-	my_print("이글루스 - 0, 네이트 - 1\n기본으로 이글루스로 설정됩니다.\n> ");
-	chomp($is_nate = <STDIN>);
-	if('' eq $is_nate || 1 != $is_nate)
-	{
-		my_print("이글루스 아이디와 비밀번호를 입력해주세요.\n");
-	}
-	else
-	{
-		my_print("네이트 아이디와 비밀번호를 입력해주세요.\n");
-	}
+#	my_print("\n이글루스 로그인? 네이트 로그인?\n");
+#	my_print("이글루스 - 0, 네이트 - 1\n기본으로 이글루스로 설정됩니다.\n> ");
+#	chomp($is_nate = <STDIN>);
+#	if('' eq $is_nate || 1 != $is_nate)
+#	{
+#		my_print("이글루스 아이디와 비밀번호를 입력해주세요.\n");
+#	}
+#	else
+#	{
+#		my_print("네이트 아이디와 비밀번호를 입력해주세요.\n");
+#	}
 	
 	# 아이디를 받는다.
 	my_print("\n로그인을 위해 아이디와 비밀번호, \n그리고 이사를 위해 새로운 블로그 주소를 넣어주세요.\n");
@@ -242,6 +244,14 @@ while(1)
 		#	정렬.
 		@all_post = sort { $a->{postid} cmp $b->{postid} } @all_post;
 		
+		my $ttxml_postid = 1;
+		# post 위치 기억하기
+		for my $the_post (@all_post)
+		{
+			$egloosinfo->{egloos_postid_to_textcube_postid}{$the_post->{postid}} = $ttxml_postid;
+			$ttxml_postid++;
+		}
+		
 		# xml 파일을 나눌 것인지 아니면 하나로 할 것인지 사용자의 입력을 받는다.
 		if('1' eq $numbers)
 		{
@@ -310,7 +320,7 @@ while(1)
 # 하지만 프로그램을 윈도우에서 바로 시작한 사람은 이 메시지를 못 본다.
 # 물론 이 밑에 STDIN으로 볼 수 있게 할 수 있으나 굳이 해야하는가 의문이다.
 my_print("끝났습니다~^^\n\n");
-my_print("프로그램 만든이 : NoSyu(http://nosyu.pe.kr)\n\n");
+my_print("프로그램 만든이 : NoSyu (http://nosyu.pe.kr)\n\n");
 
 # 마지막 장면(?)을 볼 수 있게 <STDIN>을 붙인다.
 my_print("엔터 혹은 Ctrl+C를 누르면 프로그램이 끝납니다.\n");

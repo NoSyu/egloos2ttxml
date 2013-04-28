@@ -151,17 +151,6 @@ sub new ($$$$$\%\@)
 	#	&amp; -> &
 		$post_title =~ s/&amp;/&/ig;	
 	
-#	주소 안의 자신의 블로그 주소를 새로운 것으로 바꿈.
-	if(!('' eq $newblogurl))
-	{
-		if($href =~ m/$blogurl\/(\d{6,7})/ig)
-		{
-			my $new_postid = scalar(keys(%$postid_index)) - $postid_index->{$1};
-			$href =~ s/$blogurl\/(\d{6,7})/$newblogurl\/$new_postid/ig;
-		}
-	}
-	
-	
 #	셋팅.
 	my $self = { url=>$href, title=>$post_title,
 		site=>$blog_title, excerpt=>$description, received=>$time,

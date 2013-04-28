@@ -29,6 +29,7 @@ my $post_count; # 가지고 있는 포스트의 개수
 # 따라서 그냥 xml 파일에 attachment로 파일을 붙이기로 함. 
 my $trackback_count;
 my $comment_count;
+my %egloos_postid_to_textcube_postid;	# Egloos post id가 새로운 블로그의 post id가 되도록 match시키는 것. 이것은 post를 다 다운로드 받은 후에 채워진다.
 
 #생성자
 sub new ($$$)
@@ -78,7 +79,8 @@ sub new ($$$)
 		blogurl=>$blogurl, eid=>$eid, post_num=>$post_num,
 		id=>$id, blog_title=>$blog_title, author=>$author, newblogurl=>$newblogurl,
 		post_count=>$post_count, trackback_count=>$trackback_count, comment_count=>$comment_count,
-		is_use_mobile=>$is_use_mobile};
+		is_use_mobile=>$is_use_mobile,
+		egloos_postid_to_textcube_postid=>%egloos_postid_to_textcube_postid};
 #	referencing
 	bless ($self, $class);
 	

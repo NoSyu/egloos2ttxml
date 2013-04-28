@@ -254,8 +254,7 @@ sub new ($$$$\%\@)
 	#	<br><br /><br/> -> \n
 		$description =~ s/<br[ \/]*?>/\n/ig;
 	#	<a href="http://nosyu.pe.kr/">http://nosyu.pe.kr/</a>
-		$description =~ s/<a href="[^>]+?>(.+?)<\/a>/$1/ig;
-	
+		$description =~ s/<a href="[^>]+?>(.+?)<\/a>/$1/ig;	
 	
 	# time
 	my $delete_needle = '<img src="http://md.egloos.com/img/mobile/ico_lock.gif" alt="비밀글" class="ico_lock" />';
